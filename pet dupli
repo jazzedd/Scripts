@@ -135,7 +135,7 @@ end)
 
 -- Footer
 local footer = Instance.new("TextLabel", frame)
-footer.Text = "👤 Tiktok: @yawiyawiyawiz1"
+footer.Text = "👤 Tiktok: @WhosJaradd"
 footer.Font = Enum.Font.FredokaOne
 footer.TextSize = 13
 footer.TextColor3 = Color3.fromRGB(0, 200, 255)
