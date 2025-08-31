@@ -7,10 +7,10 @@ shared.LoaderKeyFrames = {
     [4] = {4, 100}
 }
 shared.LoaderSteps = {
-    [1] = "1. Initializing...",
-    [2] = "2. Fetching Data...",
-    [3] = "3. Decrypting...",
-    [4] = "4. Finalizing..."
+    [1] = " Initializing...",
+    [2] = " Fetching Data...",
+    [3] = " Decrypting...",
+    [4] = " Finalizing..."
 }
 
 -- Add blur effect
