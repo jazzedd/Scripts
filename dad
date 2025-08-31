@@ -51,7 +51,7 @@ local function CreateLoaderUI()
     -- User Image
     local image = Instance.new("ImageLabel", main)
     image.BackgroundTransparency = 1
-    image.Image = "rbxassetid://81767899440204"
+    image.Image = "rbxassetid://9835676498"
     image.Position = UDim2.new(0, 15, 0, 10)
     image.Size = UDim2.new(0, 50, 0, 50)
     local imageCorner = Instance.new("UICorner", image)
