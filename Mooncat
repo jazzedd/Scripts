@@ -1,0 +1,106 @@
+-- 🖤 Glass Theme Moon Cat Ability Range GUI (Draggable)
+
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Cleanup old GUI if exists
+if PlayerGui:FindFirstChild("MoonCatRangeGUI") then
+    PlayerGui.MoonCatRangeGUI:Destroy()
+end
+
+-- ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MoonCatRangeGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = PlayerGui
+
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 250, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -125, 0.5, -60)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30) -- dark glass
+MainFrame.BackgroundTransparency = 0.6
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+-- Rounded corners
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 15)
+UICorner.Parent = MainFrame
+
+-- Glow/Stroke
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(0, 200, 255) -- cyan glow
+Stroke.Thickness = 2
+Stroke.Transparency = 0.5
+Stroke.Parent = MainFrame
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -20, 0, 40)
+Title.Position = UDim2.new(0, 10, 0, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "🌙 MOON CAT ABILITY RANGE"
+Title.TextColor3 = Color3.fromRGB(0, 200, 255)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 14
+Title.TextWrapped = true
+Title.Parent = MainFrame
+
+-- Apply Button
+local ApplyButton = Instance.new("TextButton")
+ApplyButton.Size = UDim2.new(0, 180, 0, 40)
+ApplyButton.Position = UDim2.new(0.5, -90, 0, 70)
+ApplyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 50) -- dark glass button
+ApplyButton.Text = "Apply Mooncat Range"
+ApplyButton.TextColor3 = Color3.fromRGB(0, 200, 255)
+ApplyButton.Font = Enum.Font.GothamBold
+ApplyButton.TextSize = 14
+ApplyButton.Parent = MainFrame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 12)
+ButtonCorner.Parent = ApplyButton
+
+-- Button Hover Effect
+ApplyButton.MouseEnter:Connect(function()
+    TweenService:Create(ApplyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(0, 30, 60)}):Play()
+end)
+ApplyButton.MouseLeave:Connect(function()
+    TweenService:Create(ApplyButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(30, 30, 50)}):Play()
+end)
+
+-- Button functionality (example)
+ApplyButton.MouseButton1Click:Connect(function()
+    print("Mooncat range applied!") -- replace with actual logic
+end)
+
+-- Draggable Logic
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+	local delta = input.Position - dragStart
+	MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+MainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+MainFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then update(input) end
+end)
