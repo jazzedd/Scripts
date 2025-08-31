@@ -1,0 +1,218 @@
+-- 🖤 Glass/Dark Remove Dupe Tag GUI
+
+--// Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- ===== CONFIG =====
+local DUPLICATE_PHRASE = "You cannot trade this pet since it is duplicated"
+local REPLACEMENT_TEXT = "Your trade is processing, please wait until your trade finalizes before creating another one."
+local REPLACEMENT_COLOR = Color3.fromRGB(0, 200, 255) -- cyan glow
+-- ==================
+
+-- Helpers
+local function containsIgnoreCase(haystack, needle)
+	if not haystack or not needle then return false end
+	return string.find(string.lower(haystack), string.lower(needle)) ~= nil
+end
+
+local function fixWarningLabelProps(desc)
+	pcall(function()
+		desc.Text = REPLACEMENT_TEXT
+		desc.TextColor3 = REPLACEMENT_COLOR
+		desc.Font = Enum.Font.GothamBold
+		desc.TextScaled = false
+		desc.TextSize = 16
+		desc.TextWrapped = true
+		desc.TextXAlignment = Enum.TextXAlignment.Center
+		desc.TextYAlignment = Enum.TextYAlignment.Center
+		desc.Size = UDim2.new(0, 330, 0, 50)
+		desc.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+		desc.TextStrokeTransparency = 0
+	end)
+end
+
+local function replaceDuplicateWarningsInGui(root)
+	for _, desc in ipairs(root:GetDescendants()) do
+		if (desc:IsA("TextLabel") or desc:IsA("TextBox") or desc:IsA("TextButton")) and desc.Text and desc.Text ~= "" then
+			if containsIgnoreCase(desc.Text, DUPLICATE_PHRASE) then
+				fixWarningLabelProps(desc)
+			end
+		end
+	end
+end
+
+local function hookGuiReplacement()
+	replaceDuplicateWarningsInGui(playerGui)
+	playerGui.DescendantAdded:Connect(function(desc)
+		task.wait(0.05)
+		if desc and (desc:IsA("TextLabel") or desc:IsA("TextBox") or desc:IsA("TextButton")) then
+			if containsIgnoreCase(desc.Text or "", DUPLICATE_PHRASE) then
+				fixWarningLabelProps(desc)
+			end
+		end
+	end)
+end
+
+local function getEquippedPetTool()
+	character = player.Character or player.CharacterAdded:Wait()
+	for _, tool in pairs(character:GetChildren()) do
+		if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+			return tool
+		end
+	end
+	return nil
+end
+
+local function removeDupeTagFrom(tool)
+	if not tool then return end
+	for _, v in ipairs(tool:GetDescendants()) do
+		if v:IsA("StringValue") or v:IsA("TextLabel") then
+			if string.find(string.lower(v.Name), "duplicate") 
+				or string.find(string.lower(v.Value or ""), "cannot trade this pet since it is duplicated") then
+				v:Destroy()
+			end
+		end
+	end
+end
+
+-- GUI Setup
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RemoveTagGUIGlass"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame", screenGui)
+mainFrame.Size = UDim2.new(0, 300, 0, 180)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -90)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+mainFrame.BackgroundTransparency = 0.6
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 16)
+
+-- Frame Glow
+local stroke = Instance.new("UIStroke", mainFrame)
+stroke.Color = Color3.fromRGB(0, 200, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.5
+
+-- Draggable logic
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+mainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+mainFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		dragInput = input
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then update(input) end
+end)
+
+-- Title
+local title = Instance.new("TextLabel", mainFrame)
+title.Size = UDim2.new(1, -10, 0, 30)
+title.Position = UDim2.new(0, 5, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "🛠️ Remover Dupe Tag v1 ✨"
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 20
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.TextStrokeTransparency = 0.5
+
+-- Toggle Button
+local toggleBtn = Instance.new("TextButton", mainFrame)
+toggleBtn.Size = UDim2.new(0, 250, 0, 40)
+toggleBtn.Position = UDim2.new(0.5, -125, 0, 50)
+toggleBtn.Text = " Enable Remove Dupe Tag "
+toggleBtn.Font = Enum.Font.GothamBold
+toggleBtn.TextSize = 16
+toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+toggleBtn.TextColor3 = Color3.fromRGB(0, 200, 255)
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0, 8)
+
+-- Hover effect
+toggleBtn.MouseEnter:Connect(function()
+	TweenService:Create(toggleBtn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(0,30,60)}):Play()
+end)
+toggleBtn.MouseLeave:Connect(function()
+	TweenService:Create(toggleBtn,TweenInfo.new(0.2),{BackgroundColor3=Color3.fromRGB(30,30,50)}):Play()
+end)
+
+-- Status label
+local statusLabel = Instance.new("TextLabel", mainFrame)
+statusLabel.Size = UDim2.new(1, -20, 0, 40)
+statusLabel.Position = UDim2.new(0, 10, 0, 100)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextWrapped = true
+statusLabel.TextColor3 = Color3.fromRGB(0, 200, 255)
+statusLabel.Text = "Status: Disabled"
+
+-- Footer
+local footer = Instance.new("TextLabel", mainFrame)
+footer.Size = UDim2.new(1, -10, 0, 16)
+footer.Position = UDim2.new(0, 5, 1, -16)
+footer.BackgroundTransparency = 1
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 10
+footer.TextColor3 = Color3.fromRGB(0, 200, 255)
+footer.Text = "✨ TikTok: @WhosJaradd 🐾"
+footer.TextXAlignment = Enum.TextXAlignment.Center
+footer.TextYAlignment = Enum.TextYAlignment.Center
+
+-- Logic
+local enabled = false
+local connection
+
+toggleBtn.MouseButton1Click:Connect(function()
+	if not enabled then
+		toggleBtn.Text = "⏳ Loading..."
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 30, 60)
+		for i = 15, 1, -1 do
+			toggleBtn.Text = " Enabling in " .. i .. "s "
+			task.wait(1)
+		end
+
+		statusLabel.Text = "Status: Enabled 🎉"
+		enabled = true
+		hookGuiReplacement()
+
+		connection = character.ChildAdded:Connect(function(child)
+			if enabled and child:IsA("Tool") then
+				removeDupeTagFrom(child)
+			end
+		end)
+
+		local current = getEquippedPetTool()
+		if current then removeDupeTagFrom(current) end
+
+		toggleBtn.Text = " Disable Remove Dupe Tag "
+		toggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+	else
+		enabled = false
+		statusLabel.Text = "Status: Disabled ❌"
+		toggleBtn.Text = " Enable Remove Dupe Tag "
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end
+end)
