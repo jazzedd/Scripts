@@ -126,7 +126,7 @@ if executor == "Delta" then
     Instance.new("UICorner", openButton).CornerRadius = UDim.new(0, 10)
 
     task.spawn(function()
-        local countdown = 5
+        local countdown = 7
         while countdown > 0 do
             openButton.Text = string.format("Click to Open the Script (%.1fs)", countdown)
             task.wait(0.1)
