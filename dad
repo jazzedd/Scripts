@@ -1,5 +1,5 @@
 -- Shared Variables
-shared.LoaderTitle = "Follow  WhosJaraddd"
+shared.LoaderTitle = "Follow @WhosJaraddd"
 shared.LoaderKeyFrames = {
     [1] = {1, 10},
     [2] = {2, 30},
@@ -51,7 +51,7 @@ local function CreateLoaderUI()
     -- User Image
     local image = Instance.new("ImageLabel", main)
     image.BackgroundTransparency = 1
-    image.Image = "rbxassetid://9835676498"
+    image.Image = "rbxassetid://4575171289"
     image.Position = UDim2.new(0, 15, 0, 10)
     image.Size = UDim2.new(0, 50, 0, 50)
     local imageCorner = Instance.new("UICorner", image)
@@ -59,7 +59,7 @@ local function CreateLoaderUI()
 
     -- User name label
     local name = Instance.new("TextLabel", main)
-    name.Text = "Tiktok: WhosJaraddd"
+    name.Text = "Tiktok: @WhosJaraddd"
     name.Font = Enum.Font.GothamBold
     name.TextColor3 = Color3.fromRGB(255, 255, 255)
     name.TextSize = 14
@@ -70,7 +70,7 @@ local function CreateLoaderUI()
 
     -- Loader label
     local top = Instance.new("TextLabel", main)
-    top.Text = "Loader"
+    top.Text = "One Of The Best Script Loader"
     top.Font = Enum.Font.Gotham
     top.TextColor3 = Color3.fromRGB(200, 200, 200)
     top.TextSize = 10
