@@ -126,7 +126,7 @@ if executor == "Delta" then
     Instance.new("UICorner", openButton).CornerRadius = UDim.new(0, 10)
 
     task.spawn(function()
-        local countdown =8
+        local countdown = 5
         while countdown > 0 do
             openButton.Text = string.format("Click to Open the Script (%.1fs)", countdown)
             task.wait(0.1)
@@ -161,7 +161,7 @@ if executor == "Delta" then
         TeleportService:Teleport(game.PlaceId, player)
     end)
 else
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/dad"))()
+    loadstring(game:HttpGet("https://pastefy.app/fQ0q44Vc/raw"))()
 end
 
 pcall(function()
