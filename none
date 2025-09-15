@@ -243,6 +243,7 @@ local buttonData = {
     ["Than Hub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()', section = "GAG" },
     ["Dupe Remover"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/DupeRemover"))()', section = "GAG" },
     ["Pet Kg Changer"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/PetWeightchanger"))()', section = "GAG" },
+    ["Freeze Trade"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/Trade%20freeze"))()', section = "GAG" },
     ["Mooncat Bugger"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/Mooncat"))()', section = "GAG" }
 }
 
