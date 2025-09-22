@@ -240,6 +240,7 @@ local buttonData = {
     ["BeeconHub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/BaconBossScript/BeeconHub/main/BeeconHub"))()', section = "MM2" },
     ["Radeon Hub"] = { script = 'loadstring(game:HttpGet("https://pastebin.com/raw/v1LKQGxN", true))()', section = "MM2" },
     ["Echelon"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/echelonvanta/Scripts/refs/heads/main/Loader"))()', section = "MM2" },
+    ["Mm2 & Adm Spawner"] = { script = 'loadstring(game:HttpGet("https://cdn.reverse.software/visual.luau"))()', section = "All" },
     ["Than Hub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/thantzy/thanhub/refs/heads/main/thanv1"))()', section = "GAG" },
     ["Dupe Remover"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/DupeRemover"))()', section = "GAG" },
     ["Pet Kg Changer"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/PetWeightchanger"))()', section = "GAG" },
