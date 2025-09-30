@@ -231,6 +231,7 @@ CreditLabel.TextXAlignment = Enum.TextXAlignment.Center
 local buttonData = {
 	["DarkScript Spawner"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/veryimportantrr/x/refs/heads/main/gag_visual.lua"))()', section = "GAG" },
     ["Ronix Hub"] = { script = 'loadstring(game:HttpGet("https://api.luarmor.net/files/v3/loaders/b44706178039e9b88c4d768d4d8b012f.lua"))()', section = "GAG" },
+    ["Lunor"] = { script = 'loadstring(game:HttpGet("https://lunor.dev/loader"))()', section = "GAG" },
     ["Thunder Z Hub"] = { script = "loadstring(game:HttpGet('https://raw.githubusercontent.com/ThundarZ/Welcome/refs/heads/main/Main/GaG/Main.lua'))()", section = "GAG" },
     ["Limit Hub"] = { script = "loadstring(game:HttpGet(('https://raw.githubusercontent.com/FakeModz/LimitHub/refs/heads/main/LimitHub_Luarmor_E.lua')))()", section = "GAG" },
     ["Speed Hub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/AhmadV99/Speed-Hub-X/main/Speed%20Hub%20X.lua", true))()', section = "GAG" },
