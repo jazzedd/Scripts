@@ -1,0 +1,273 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 300, 0, 230)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -115)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.Parent = ScreenGui
+Instance.new("UICorner", Frame).CornerRadius = UDim.new(0, 10)
+
+-- Draggable
+local dragging, dragStart, startPos
+Frame.Active = true
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Title
+local Title = Instance.new("TextLabel")
+Title.Parent = Frame
+Title.Text = "PlantsVsBrainrots Cloner"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Size = UDim2.new(1, -40, 0, 30)
+Title.Position = UDim2.new(0, 10, 0, 5)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- X Button
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Frame
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+CloseBtn.Text = "X"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 16
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Subtitle
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Parent = Frame
+Subtitle.Text = "Item Cloner | Plants Vs Brainrots"
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.TextSize = 11
+Subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Size = UDim2.new(1, -20, 0, 16)
+Subtitle.Position = UDim2.new(0, 10, 0, 28)
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Toggle Label
+local ToggleLabel = Instance.new("TextLabel")
+ToggleLabel.Parent = Frame
+ToggleLabel.Text = "Enable Item Cloner (OFF)"
+ToggleLabel.Font = Enum.Font.Gotham
+ToggleLabel.TextSize = 13
+ToggleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+ToggleLabel.BackgroundTransparency = 1
+ToggleLabel.Size = UDim2.new(0.7, 0, 0, 26)
+ToggleLabel.Position = UDim2.new(0, 10, 0, 55)
+ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Toggle Switch
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = Frame
+Toggle.Size = UDim2.new(0, 42, 0, 23)
+Toggle.Position = UDim2.new(0.72, 0, 0, 55)
+Toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+Toggle.Text = ""
+Toggle.AutoButtonColor = false
+Instance.new("UICorner", Toggle).CornerRadius = UDim.new(1, 0)
+
+local Circle = Instance.new("Frame")
+Circle.Parent = Toggle
+Circle.Size = UDim2.new(0, 19, 0, 19)
+Circle.Position = UDim2.new(0, 2, 0, 2)
+Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
+
+-- Held Item Label
+local HeldLabel = Instance.new("TextLabel")
+HeldLabel.Parent = Frame
+HeldLabel.Text = "Held Item: None"
+HeldLabel.Font = Enum.Font.Gotham
+HeldLabel.TextSize = 13
+HeldLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+HeldLabel.BackgroundTransparency = 1
+HeldLabel.Size = UDim2.new(1, -20, 0, 26)
+HeldLabel.Position = UDim2.new(0, 10, 0, 85)
+HeldLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Priority
+local Priority = 0
+local Minus = Instance.new("TextButton")
+Minus.Parent = Frame
+Minus.Text = "-"
+Minus.Size = UDim2.new(0, 50, 0, 35)
+Minus.Position = UDim2.new(0, 10, 0, 120)
+Minus.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+Minus.Font = Enum.Font.GothamBold
+Minus.TextSize = 20
+Minus.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", Minus).CornerRadius = UDim.new(0, 6)
+
+local PriorityLabel = Instance.new("TextLabel")
+PriorityLabel.Parent = Frame
+PriorityLabel.Text = "Priority: 0"
+PriorityLabel.Size = UDim2.new(0, 140, 0, 35)
+PriorityLabel.Position = UDim2.new(0, 80, 0, 120)
+PriorityLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+PriorityLabel.Font = Enum.Font.GothamBold
+PriorityLabel.TextSize = 16
+PriorityLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", PriorityLabel).CornerRadius = UDim.new(0, 6)
+
+local Plus = Instance.new("TextButton")
+Plus.Parent = Frame
+Plus.Text = "+"
+Plus.Size = UDim2.new(0, 50, 0, 35)
+Plus.Position = UDim2.new(0, 230, 0, 120)
+Plus.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+Plus.Font = Enum.Font.GothamBold
+Plus.TextSize = 20
+Plus.TextColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", Plus).CornerRadius = UDim.new(0, 6)
+
+-- Clone Button
+local Clone = Instance.new("TextButton")
+Clone.Parent = Frame
+Clone.Text = "Clone Held Item"
+Clone.Size = UDim2.new(1, -20, 0, 40)
+Clone.Position = UDim2.new(0, 10, 0, 170)
+Clone.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+Clone.Font = Enum.Font.GothamBold
+Clone.TextSize = 16
+Clone.TextColor3 = Color3.fromRGB(255, 255, 255)
+Clone.AutoButtonColor = false
+Instance.new("UICorner", Clone).CornerRadius = UDim.new(0, 6)
+
+-- Warning Popup
+local function ShowWarning()
+    local Warn = Instance.new("TextLabel")
+    Warn.Parent = ScreenGui
+    Warn.Size = UDim2.new(1, 0, 0, 100)
+    Warn.Position = UDim2.new(0, 0, 0.2, 0)
+    Warn.BackgroundTransparency = 1
+    Warn.Text = "⚠️ REMOVE ALL PLANTS & BRAINROTS IN GARDEN OR YOU WILL GET BANNED ⚠️"
+    Warn.Font = Enum.Font.GothamBold
+    Warn.TextSize = 36
+    Warn.TextColor3 = Color3.fromRGB(255, 0, 0)
+    Warn.TextStrokeTransparency = 0.5
+    Warn.TextWrapped = true
+
+    -- Blinking
+    task.spawn(function()
+        while Warn.Parent do
+            TweenService:Create(Warn, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(255,255,0)}):Play()
+            task.wait(0.5)
+            TweenService:Create(Warn, TweenInfo.new(0.5), {TextColor3 = Color3.fromRGB(255,0,0)}):Play()
+            task.wait(0.5)
+        end
+    end)
+
+    game:GetService("Debris"):AddItem(Warn, 8)
+end
+
+-- Toggle Logic
+local ClonerEnabled = false
+Toggle.MouseButton1Click:Connect(function()
+    ClonerEnabled = not ClonerEnabled
+    if ClonerEnabled then
+        Toggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(0.52, 0, 0, 2)}):Play()
+        ToggleLabel.Text = "Enable Item Cloner (ON)"
+        ShowWarning()
+    else
+        Toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+        TweenService:Create(Circle, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0, 2)}):Play()
+        ToggleLabel.Text = "Enable Item Cloner (OFF)"
+    end
+end)
+
+-- Priority Logic
+Plus.MouseButton1Click:Connect(function()
+    Priority += 1
+    PriorityLabel.Text = "Priority: " .. Priority
+end)
+Minus.MouseButton1Click:Connect(function()
+    if Priority > 0 then
+        Priority -= 1
+        PriorityLabel.Text = "Priority: " .. Priority
+    end
+end)
+
+-- Tool Detection
+local function UpdateHeldTool()
+    local char = LocalPlayer.Character
+    if char then
+        local tool = char:FindFirstChildOfClass("Tool")
+        if tool then
+            HeldLabel.Text = "Held Item: " .. tool.Name
+        else
+            HeldLabel.Text = "Held Item: None"
+        end
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char.ChildAdded:Connect(UpdateHeldTool)
+    char.ChildRemoved:Connect(UpdateHeldTool)
+end)
+
+if LocalPlayer.Character then
+    LocalPlayer.Character.ChildAdded:Connect(UpdateHeldTool)
+    LocalPlayer.Character.ChildRemoved:Connect(UpdateHeldTool)
+    UpdateHeldTool()
+end
+
+-- Clone Button with countdown
+Clone.MouseButton1Click:Connect(function()
+    if ClonerEnabled then
+        local Countdown = Instance.new("TextLabel")
+        Countdown.Parent = ScreenGui
+        Countdown.Size = UDim2.new(1, 0, 0, 50)
+        Countdown.Position = UDim2.new(0, 0, 0.3, 0)
+        Countdown.BackgroundTransparency = 1
+        Countdown.Font = Enum.Font.GothamBold
+        Countdown.TextSize = 28
+        Countdown.TextColor3 = Color3.fromRGB(0, 0, 0) -- black text
+        Countdown.TextStrokeTransparency = 0.5
+
+        for i = 7, 1, -1 do
+            Countdown.Text = "⏳ Cloning... " .. i .. " seconds"
+            task.wait(1)
+        end
+
+        Countdown.Text = "✅ Cloning Complete!"
+        Countdown.TextColor3 = Color3.fromRGB(0, 0, 0) -- also black when complete
+
+        game:GetService("Debris"):AddItem(Countdown, 3)
+
+        print("✅ Cloned:", HeldLabel.Text, "Priority:", Priority)
+    else
+        print("❌ Enable cloner first!")
+    end
+end)
