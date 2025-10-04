@@ -239,6 +239,7 @@ local buttonData = {
     ["All-in-one Script"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Jaradscript/refs/heads/main/jarapd%20script"))()', section = "GAG" },
     ["ZysumeHub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/ZusumeHub/ZusumeHub/refs/heads/main/UpdateZysume"))()', section = "GAG" },
     ["BeeconHub"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/BaconBossScript/BeeconHub/main/BeeconHub"))()', section = "MM2" },
+    ["PVB DUPER"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/pvb%20chrg"))()', section = "All" },
     ["Radeon Hub"] = { script = 'loadstring(game:HttpGet("https://pastebin.com/raw/v1LKQGxN", true))()', section = "MM2" },
     ["Echelon"] = { script = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/echelonvanta/Scripts/refs/heads/main/Loader"))()', section = "MM2" },
     ["Mm2 & Adm Spawner"] = { script = 'loadstring(game:HttpGet("http://109.71.240.235:3910/cdn/visual.luau"))()', section = "All" },
