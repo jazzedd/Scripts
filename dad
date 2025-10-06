@@ -1,10 +1,10 @@
 -- Shared Variables
 shared.LoaderTitle = "Follow @WhosJaraddd"
 shared.LoaderKeyFrames = {
-    [1] = {1, 1.25},   -- 1.25s mark
-    [2] = {2, 2.5},    -- 2.5s mark
-    [3] = {3, 3.75},   -- 3.75s mark
-    [4] = {4, 5}       -- 5s mark (end)
+    [1] = {1, 25},   -- 25%
+    [2] = {2, 50},   -- 50%
+    [3] = {3, 75},   -- 75%
+    [4] = {4, 100}   -- 100%
 }
 shared.LoaderSteps = {
     [1] = " Initializing...",
@@ -20,21 +20,20 @@ blur.Parent = game:GetService("Lighting")
 
 -- Create loader UI
 local function CreateLoaderUI()
-    -- ScreenGui
-    local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    screenGui.Name = "LoaderUI"
-    screenGui.IgnoreGuiInset = true
-    screenGui.ResetOnSpawn = false
-
-    -- Mobile scaling
-    local uiScale = Instance.new("UIScale")
-    uiScale.Scale = 1
-    uiScale.Parent = screenGui
+    local TweenService = game:GetService("TweenService")
+    local CoreGui = game:GetService("CoreGui")
 
     -- Tween utility
     local function Tween(obj, time, props)
-        game:GetService("TweenService"):Create(obj, TweenInfo.new(time), props):Play()
+        TweenService:Create(obj, TweenInfo.new(time, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
     end
+
+    -- ScreenGui
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "LoaderUI"
+    screenGui.IgnoreGuiInset = true
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = CoreGui
 
     -- Main Frame
     local main = Instance.new("Frame")
@@ -117,22 +116,26 @@ local function CreateLoaderUI()
 
     -- Animate loading (5 seconds total)
     task.spawn(function()
+        local totalTime = 5
+        local perStep = totalTime / #shared.LoaderKeyFrames
+
         for index, data in ipairs(shared.LoaderKeyFrames) do
             step.Text = shared.LoaderSteps[index] or ""
-            Tween(progress, 0.3, {
-                Size = UDim2.new(data[2] / 5, 0, 1, 0)
+            Tween(progress, 0.4, {
+                Size = UDim2.new(data[2] / 100, 0, 1, 0)
             })
-            task.wait(1.25) -- even spacing over 5s
+            task.wait(perStep)
         end
 
         -- Done loading
+        step.Text = " Complete!"
         Tween(main, 0.3, {Size = UDim2.new(0, 0, 0, 0)})
         Tween(blur, 0.5, {Size = 0})
         task.wait(0.5)
         screenGui:Destroy()
         blur:Destroy()
 
--- ✅ Load your actual script
+        -- ✅ Load your actual script here
         loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/none"))()
     end)
 end
