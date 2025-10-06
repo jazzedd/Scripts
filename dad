@@ -2,9 +2,9 @@
 shared.LoaderTitle = "Follow @WhosJaraddd"
 shared.LoaderKeyFrames = {
     [1] = {1, 10},
-    [2] = {2, 30},
-    [3] = {3, 60},
-    [4] = {4, 100}
+    [2] = {2, 25},
+    [3] = {3, 40},
+    [4] = {4, 60}
 }
 shared.LoaderSteps = {
     [1] = " Initializing...",
