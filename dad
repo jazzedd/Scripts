@@ -1,10 +1,10 @@
 -- Shared Variables
 shared.LoaderTitle = "Follow @WhosJaraddd"
 shared.LoaderKeyFrames = {
-    [1] = {1, 1},
-    [2] = {2, 2.5},
-    [3] = {3, 3.8},
-    [4] = {4, 5}
+    [1] = {1, 1.25},   -- 1.25s mark
+    [2] = {2, 2.5},    -- 2.5s mark
+    [3] = {3, 3.75},   -- 3.75s mark
+    [4] = {4, 5}       -- 5s mark (end)
 }
 shared.LoaderSteps = {
     [1] = " Initializing...",
@@ -45,8 +45,7 @@ local function CreateLoaderUI()
     main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
-    local corner = Instance.new("UICorner", main)
-    corner.CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
 
     -- User Image
     local image = Instance.new("ImageLabel", main)
@@ -54,8 +53,7 @@ local function CreateLoaderUI()
     image.Image = "rbxassetid://4575171289"
     image.Position = UDim2.new(0, 15, 0, 10)
     image.Size = UDim2.new(0, 50, 0, 50)
-    local imageCorner = Instance.new("UICorner", image)
-    imageCorner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", image).CornerRadius = UDim.new(1, 0)
 
     -- User name label
     local name = Instance.new("TextLabel", main)
@@ -97,15 +95,13 @@ local function CreateLoaderUI()
     bg.Position = UDim2.new(0.5, 0, 0, 120)
     bg.Size = UDim2.new(0.85, 0, 0, 24)
     bg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    local bgCorner = Instance.new("UICorner", bg)
-    bgCorner.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
 
     -- Progress bar fill
     local progress = Instance.new("Frame", bg)
     progress.Size = UDim2.new(0, 0, 1, 0)
     progress.BackgroundColor3 = Color3.fromRGB(130, 36, 212)
-    local progressCorner = Instance.new("UICorner", progress)
-    progressCorner.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", progress).CornerRadius = UDim.new(0, 8)
 
     -- Step label
     local step = Instance.new("TextLabel", main)
@@ -119,26 +115,24 @@ local function CreateLoaderUI()
     step.BackgroundTransparency = 1
     step.TextXAlignment = Enum.TextXAlignment.Center
 
-    -- Animate loading
+    -- Animate loading (5 seconds total)
     task.spawn(function()
-        for index, data in pairs(shared.LoaderKeyFrames) do
-            task.wait(data[1])
-            Tween(progress, 0.5, {
-                Size = UDim2.new(data[2] / 100, 0, 1, 0)
-            })
+        for index, data in ipairs(shared.LoaderKeyFrames) do
             step.Text = shared.LoaderSteps[index] or ""
+            Tween(progress, 0.3, {
+                Size = UDim2.new(data[2] / 5, 0, 1, 0)
+            })
+            task.wait(1.25) -- even spacing over 5s
         end
 
         -- Done loading
-        task.wait(1)
-        Tween(main, 0.25, {
-            Size = UDim2.new(0, 0, 0, 0)
-        })
-        task.wait(0.25)
+        Tween(main, 0.3, {Size = UDim2.new(0, 0, 0, 0)})
+        Tween(blur, 0.5, {Size = 0})
+        task.wait(0.5)
         screenGui:Destroy()
         blur:Destroy()
 
-        -- ✅ Load your actual script
+-- ✅ Load your actual script
         loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/none"))()
     end)
 end
