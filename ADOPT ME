@@ -1,0 +1,298 @@
+-- Adopt Me GUI 🐣✨
+-- Step popup + Animated 6s Processing GUI
+-- by @WhosJaraddd
+
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local LP = Players.LocalPlayer
+
+-- Screen GUI
+local gui = Instance.new("ScreenGui", LP:WaitForChild("PlayerGui"))
+gui.Name = "AdoptMe"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Main Frame
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 360, 0, 420)
+main.Position = UDim2.new(0.5, -180, 0.5, -210)
+main.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
+title.Font = Enum.Font.GothamBold
+title.Text = "Adopt Me 🐾"
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextSize = 19
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+local close = Instance.new("TextButton", title)
+close.Size = UDim2.new(0, 40, 0, 40)
+close.Position = UDim2.new(1, -45, 0, 0)
+close.BackgroundTransparency = 1
+close.Text = "×"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 24
+close.TextColor3 = Color3.fromRGB(255, 70, 70)
+
+-- Container
+local container = Instance.new("Frame", main)
+container.Size = UDim2.new(1, -20, 1, -60)
+container.Position = UDim2.new(0, 10, 0, 50)
+container.BackgroundTransparency = 1
+
+local UIList = Instance.new("UIListLayout", container)
+UIList.Padding = UDim.new(0, 10)
+UIList.FillDirection = Enum.FillDirection.Vertical
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.VerticalAlignment = Enum.VerticalAlignment.Top
+
+-- Blur
+local blurEffect = Instance.new("BlurEffect", Lighting)
+blurEffect.Size = 0
+
+-- Step Frame
+local stepFrame = Instance.new("Frame", gui)
+stepFrame.Size = UDim2.new(0, 380, 0, 220)
+stepFrame.Position = UDim2.new(0.5, -190, 0.5, -110)
+stepFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+stepFrame.BorderSizePixel = 0
+stepFrame.Visible = false
+stepFrame.ZIndex = 50
+Instance.new("UICorner", stepFrame).CornerRadius = UDim.new(0, 12)
+
+local stepTitle = Instance.new("TextLabel", stepFrame)
+stepTitle.Size = UDim2.new(1, 0, 0, 40)
+stepTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
+stepTitle.Font = Enum.Font.GothamBold
+stepTitle.TextColor3 = Color3.fromRGB(255,255,255)
+stepTitle.TextSize = 20
+stepTitle.Text = "Tutorial"
+Instance.new("UICorner", stepTitle).CornerRadius = UDim.new(0, 12)
+
+local stepText = Instance.new("TextLabel", stepFrame)
+stepText.Size = UDim2.new(0.9, 0, 0.6, 0)
+stepText.Position = UDim2.new(0.05, 0, 0.25, 0)
+stepText.BackgroundTransparency = 1
+stepText.Font = Enum.Font.GothamMedium
+stepText.TextColor3 = Color3.fromRGB(230,230,255)
+stepText.TextWrapped = true
+stepText.TextYAlignment = Enum.TextYAlignment.Center
+stepText.TextXAlignment = Enum.TextXAlignment.Center
+stepText.TextSize = 18
+stepText.Text = ""
+
+local nextBtn = Instance.new("TextButton", stepFrame)
+nextBtn.Size = UDim2.new(0.4, 0, 0, 35)
+nextBtn.Position = UDim2.new(0.3, 0, 1, -45)
+nextBtn.BackgroundColor3 = Color3.fromRGB(70, 100, 255)
+nextBtn.Font = Enum.Font.GothamBold
+nextBtn.TextColor3 = Color3.fromRGB(255,255,255)
+nextBtn.TextSize = 17
+nextBtn.Text = "Next Step"
+Instance.new("UICorner", nextBtn).CornerRadius = UDim.new(0, 8)
+
+-- Step Logic
+local function showSteps(titleText, steps)
+	main.Visible = false
+	stepFrame.Visible = true
+	stepTitle.Text = titleText
+	local index = 1
+	stepText.Text = steps[index]
+	TweenService:Create(blurEffect, TweenInfo.new(0.3), {Size = 20}):Play()
+
+	local conn
+	conn = nextBtn.MouseButton1Click:Connect(function()
+		index += 1
+		if index <= #steps then
+			stepText.Text = steps[index]
+			if index == #steps then
+				nextBtn.Text = "Finish"
+			end
+		else
+			conn:Disconnect()
+			stepFrame.Visible = false
+			main.Visible = true
+			TweenService:Create(blurEffect, TweenInfo.new(0.3), {Size = 0}):Play()
+			nextBtn.Text = "Next Step"
+		end
+	end)
+end
+
+-- 🔥 Animated Processing Screen (6s)
+local function showProcessing(customText)
+	local frame = Instance.new("Frame", gui)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.Size = UDim2.new(0, 420, 0, 240)
+	frame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+	frame.ZIndex = 60
+	frame.BackgroundTransparency = 1
+	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+
+	local title = Instance.new("TextLabel", frame)
+	title.Size = UDim2.new(1, 0, 0, 50)
+	title.BackgroundTransparency = 1
+	title.Font = Enum.Font.GothamBold
+	title.Text = "Processing..."
+	title.TextSize = 22
+	title.TextColor3 = Color3.fromRGB(255,255,255)
+	title.Position = UDim2.new(0, 0, 0, 20)
+
+	local desc = Instance.new("TextLabel", frame)
+	desc.Size = UDim2.new(0.9, 0, 0, 40)
+	desc.Position = UDim2.new(0.05, 0, 0, 70)
+	desc.BackgroundTransparency = 1
+	desc.Font = Enum.Font.Gotham
+	desc.TextWrapped = true
+	desc.TextYAlignment = Enum.TextYAlignment.Top
+	desc.TextColor3 = Color3.fromRGB(200,200,255)
+	desc.TextSize = 17
+	desc.Text = customText or "Executing action..."
+
+	local barBG = Instance.new("Frame", frame)
+	barBG.Size = UDim2.new(0.8, 0, 0, 14)
+	barBG.Position = UDim2.new(0.1, 0, 0.7, 0)
+	barBG.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+	Instance.new("UICorner", barBG).CornerRadius = UDim.new(0, 8)
+
+	local bar = Instance.new("Frame", barBG)
+	bar.Size = UDim2.new(0, 0, 1, 0)
+	bar.BackgroundColor3 = Color3.fromRGB(100, 120, 255)
+	Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 8)
+
+	local doneText = Instance.new("TextLabel", frame)
+	doneText.Size = UDim2.new(1, 0, 0, 40)
+	doneText.Position = UDim2.new(0, 0, 0.8, 0)
+	doneText.BackgroundTransparency = 1
+	doneText.Font = Enum.Font.GothamBold
+	doneText.TextSize = 20
+	doneText.TextColor3 = Color3.fromRGB(120,255,120)
+	doneText.Text = "✅ Done!"
+	doneText.Visible = false
+
+	TweenService:Create(frame, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+	TweenService:Create(bar, TweenInfo.new(6, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+	task.wait(6)
+
+	doneText.Visible = true
+	title.Text = "Completed!"
+	desc.Text = "Everything is ready 🎉"
+	TweenService:Create(bar, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(120,255,120)}):Play()
+	task.wait(1.5)
+
+	TweenService:Create(frame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+	task.wait(0.4)
+	frame:Destroy()
+end
+
+-- Create button group
+local function newButtonPair(title, subText, callback)
+	local section = Instance.new("Frame")
+	section.Size = UDim2.new(0.9, 0, 0, 80)
+	section.BackgroundTransparency = 1
+	section.Parent = container
+
+	local mainBtn = Instance.new("TextButton", section)
+	mainBtn.Size = UDim2.new(1, 0, 0, 40)
+	mainBtn.Position = UDim2.new(0, 0, 0, 0)
+	mainBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
+	mainBtn.Font = Enum.Font.GothamBold
+	mainBtn.TextColor3 = Color3.fromRGB(255,255,255)
+	mainBtn.TextSize = 17
+	mainBtn.Text = title
+	Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0, 8)
+
+	local subBtn = Instance.new("TextButton", section)
+	subBtn.Size = UDim2.new(1, 0, 0, 28)
+	subBtn.Position = UDim2.new(0, 0, 0, 50)
+	subBtn.BackgroundColor3 = Color3.fromRGB(65, 65, 85)
+	subBtn.Font = Enum.Font.Gotham
+	subBtn.TextColor3 = Color3.fromRGB(220,220,255)
+	subBtn.TextSize = 15
+	subBtn.Text = subText
+	Instance.new("UICorner", subBtn).CornerRadius = UDim.new(0, 6)
+
+	for _, b in pairs({mainBtn, subBtn}) do
+		b.MouseEnter:Connect(function()
+			TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(75, 75, 105)}):Play()
+		end)
+		b.MouseLeave:Connect(function()
+			TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = b == mainBtn and Color3.fromRGB(45,45,65) or Color3.fromRGB(65,65,85)}):Play()
+		end)
+	end
+
+	mainBtn.MouseButton1Click:Connect(callback)
+
+	subBtn.MouseButton1Click:Connect(function()
+		local customMessage = ""
+		if title:find("Hatch") then
+			customMessage = "Instant hatching your desired egg..."
+		elseif title:find("Potion") then
+			customMessage = "Brewing Fly Ride potion magic..."
+		elseif title:find("Mega") then
+			customMessage = "Combining pets for Mega Neon results..."
+		elseif title:find("Full") then
+			customMessage = "Training your pet to full grown level..."
+		else
+			customMessage = "Processing your request..."
+		end
+		showProcessing(customMessage)
+	end)
+end
+
+-- Buttons
+newButtonPair("🐣 Instant Hatch Egg Step By Step", "Instant Hatch Egg", function()
+	showSteps("Instant Hatch Egg", {
+		"Step 1: Go to the Nursery 🏠",
+		"Step 2: Find the Crib area 🛏️",
+		"Step 3: Place your Egg in the crib 🥚",
+		"Step 4: Now Go Outside The Nursery (Dont take your Egg with you)",
+		"Step 5: Click Instant Hatch Egg Button 🎉"
+	})
+end)
+
+newButtonPair("🪽 Get Fly Ride Potion Step By Step", "Get Fly Ride Potion", function()
+	showSteps("Get Fly Ride Potion", {
+		"Step 1: Head to the Sky Castle ☁️",
+		"Step 2: Find the Potion Room 🧪",
+		"Step 3: Walk to the Fly or Ride Potion stand",
+		"Step 4: Pretend to buy it 💸",
+		"Step 5: Click Fly Ride Potion Button 🪽"
+	})
+end)
+
+newButtonPair("✨ Make Pet Mega/Neon Step By Step", "Make Pet Mega/Neon", function()
+	showSteps("Make Pet Mega/Neon", {
+		"Step 1: Go to the Neon Cave 🌈",
+		"Step 2: Place your full-grown pets on the circles",
+		"Step 3: Watch the magic combine 🔮",
+		"Step 4: When 4 Pets is Placed proceed to step 5 ✨",
+		"Step 5: Click Make Pet Mega/Neon Button 🐾"
+	})
+end)
+
+newButtonPair("🍼 Auto Full Grown Pet Step By Step", "Auto Full Grown", function()
+	showSteps("Auto Full Grown Pet", {
+		"Step 1: Equip your pet 🐕",
+		"Step 2: Go to a safe place 🏡",
+		"Step 3: Let the GUI do the Script work 💫",
+		"Step 4: Your pet is going to grow in 15 seconds",
+		"Step 5: Click Auto Full Grown"
+	})
+end)
+
+-- Close GUI
+close.MouseButton1Click:Connect(function()
+	TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
+	task.wait(0.3)
+	gui:Destroy()
+end)
