@@ -1,0 +1,372 @@
+-- Executor-friendly House Cloner GUI (dark theme)
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local localPlayer = Players.LocalPlayer or Players:GetPlayers()[1]
+
+-- Parent selection
+local function chooseParent()
+    if localPlayer then
+        local ok, pg = pcall(function() return localPlayer:FindFirstChild("PlayerGui") end)
+        if ok and pg then return pg end
+    end
+    local ok2, core = pcall(function() return game:GetService("CoreGui") end)
+    if ok2 and core then return core end
+    return workspace
+end
+
+local parentGui = chooseParent()
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "HouseClonerGUI_" .. tostring(math.random(1000,9999))
+screenGui.ResetOnSpawn = false
+screenGui.Parent = parentGui
+
+-- Main frame
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.new(0, 360, 0, 580)
+main.Position = UDim2.new(0.5, -180, 0.5, -290)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+main.BorderSizePixel = 0
+main.Parent = screenGui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,10)
+
+-- Header
+local header = Instance.new("Frame")
+header.Name = "Header"
+header.Size = UDim2.new(1, 0, 0, 48)
+header.Position = UDim2.new(0, 0, 0, 0)
+header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+header.BorderSizePixel = 0
+header.Parent = main
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,10)
+
+local title = Instance.new("TextLabel")
+title.Parent = header
+title.Size = UDim2.new(0.6, -12, 1, 0)
+title.Position = UDim2.new(0, 12, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "House Cloner"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(245,245,245)
+title.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Dot buttons
+local dotYellow = Instance.new("TextButton")
+dotYellow.Parent = header
+dotYellow.Size = UDim2.new(0, 14, 0, 14)
+dotYellow.Position = UDim2.new(1, -44, 0, 14)
+dotYellow.BackgroundColor3 = Color3.fromRGB(255, 210, 60)
+dotYellow.Text = ""
+dotYellow.AutoButtonColor = false
+Instance.new("UICorner", dotYellow).CornerRadius = UDim.new(0,8)
+
+local dotRed = Instance.new("TextButton")
+dotRed.Parent = header
+dotRed.Size = UDim2.new(0, 14, 0, 14)
+dotRed.Position = UDim2.new(1, -24, 0, 14)
+dotRed.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+dotRed.Text = ""
+dotRed.AutoButtonColor = false
+Instance.new("UICorner", dotRed).CornerRadius = UDim.new(0,8)
+
+-- Tabs
+local tabs = Instance.new("Frame")
+tabs.Name = "Tabs"
+tabs.Size = UDim2.new(1, 0, 0, 36)
+tabs.Position = UDim2.new(0, 0, 0, 48)
+tabs.BackgroundTransparency = 1
+tabs.Parent = main
+
+local housesTab = Instance.new("TextButton")
+housesTab.Name = "HousesTab"
+housesTab.Parent = tabs
+housesTab.Size = UDim2.new(0.5, 0, 1, 0)
+housesTab.Position = UDim2.new(0, 0, 0, 0)
+housesTab.Text = "HOUSES"
+housesTab.Font = Enum.Font.GothamSemibold
+housesTab.TextSize = 14
+housesTab.TextColor3 = Color3.fromRGB(255,255,255)
+housesTab.BackgroundColor3 = Color3.fromRGB(45,120,210)
+housesTab.BorderSizePixel = 0
+housesTab.AutoButtonColor = false
+
+local infoTab = Instance.new("TextButton")
+infoTab.Name = "InfoTab"
+infoTab.Parent = tabs
+infoTab.Size = UDim2.new(0.5, 0, 1, 0)
+infoTab.Position = UDim2.new(0.5, 0, 0, 0)
+infoTab.Text = "INFO"
+infoTab.Font = Enum.Font.GothamSemibold
+infoTab.TextSize = 14
+infoTab.TextColor3 = Color3.fromRGB(200,200,200)
+infoTab.BackgroundColor3 = Color3.fromRGB(36,36,40)
+infoTab.BorderSizePixel = 0
+infoTab.AutoButtonColor = false
+
+-- Content frames
+local contentHolder = Instance.new("Frame")
+contentHolder.Size = UDim2.new(1, 0, 1, -84)
+contentHolder.Position = UDim2.new(0, 0, 0, 84)
+contentHolder.BackgroundTransparency = 1
+contentHolder.Parent = main
+
+local housesFrame = Instance.new("Frame")
+housesFrame.Size = UDim2.new(1, 0, 1, 0)
+housesFrame.Position = UDim2.new(0, 0, 0, 0)
+housesFrame.BackgroundTransparency = 1
+housesFrame.Parent = contentHolder
+
+local infoFrame = Instance.new("Frame")
+infoFrame.Size = UDim2.new(1, 0, 1, 0)
+infoFrame.Position = UDim2.new(0, 0, 0, 0)
+infoFrame.BackgroundTransparency = 1
+infoFrame.Visible = false
+infoFrame.Parent = contentHolder
+
+-- Stats card
+local statsCard = Instance.new("Frame")
+statsCard.Parent = housesFrame
+statsCard.Size = UDim2.new(1, -24, 0, 72)
+statsCard.Position = UDim2.new(0, 12, 0, 8)
+statsCard.BackgroundColor3 = Color3.fromRGB(36,36,40)
+Instance.new("UICorner", statsCard).CornerRadius = UDim.new(0,8)
+
+local savedLabel = Instance.new("TextLabel")
+savedLabel.Parent = statsCard
+savedLabel.Size = UDim2.new(0.5, 0, 1, 0)
+savedLabel.Position = UDim2.new(0, 0, 0, 0)
+savedLabel.BackgroundTransparency = 1
+savedLabel.Text = "1\nHouses Saved"
+savedLabel.TextColor3 = Color3.fromRGB(240,240,240)
+savedLabel.Font = Enum.Font.GothamBold
+savedLabel.TextSize = 16
+savedLabel.TextYAlignment = Enum.TextYAlignment.Center
+savedLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local currentLabel = Instance.new("TextLabel")
+currentLabel.Parent = statsCard
+currentLabel.Size = UDim2.new(0.5, 0, 1, 0)
+currentLabel.Position = UDim2.new(0.5, 0, 0, 0)
+currentLabel.BackgroundTransparency = 1
+currentLabel.Text = localPlayer.Name .. "\nID: " .. tostring(localPlayer.UserId)
+currentLabel.TextColor3 = Color3.fromRGB(200,200,200)
+currentLabel.Font = Enum.Font.Gotham
+currentLabel.TextSize = 14
+currentLabel.TextYAlignment = Enum.TextYAlignment.Center
+currentLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Search bar
+local searchHolder = Instance.new("Frame")
+searchHolder.Parent = housesFrame
+searchHolder.Size = UDim2.new(1, -24, 0, 42)
+searchHolder.Position = UDim2.new(0, 12, 0, 92)
+searchHolder.BackgroundColor3 = Color3.fromRGB(36,36,40)
+Instance.new("UICorner", searchHolder).CornerRadius = UDim.new(0,8)
+
+local searchBox = Instance.new("TextBox")
+searchBox.Parent = searchHolder
+searchBox.Size = UDim2.new(1, -16, 1, 0)
+searchBox.Position = UDim2.new(0, 8, 0, 0)
+searchBox.PlaceholderText = "Search by ID or owner..."
+searchBox.BackgroundTransparency = 1
+searchBox.Text = ""
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextSize = 14
+searchBox.TextColor3 = Color3.fromRGB(230,230,230)
+
+-- Houses list
+local housesListHolder = Instance.new("ScrollingFrame")
+housesListHolder.Parent = housesFrame
+housesListHolder.Size = UDim2.new(1, -24, 1, -164)
+housesListHolder.Position = UDim2.new(0, 12, 0, 148)
+housesListHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
+housesListHolder.ScrollBarThickness = 8
+housesListHolder.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+housesListHolder.BackgroundTransparency = 0
+housesListHolder.ScrollBarImageColor3 = Color3.fromRGB(30,30,30) -- dark scrollbar
+
+local listLayout = Instance.new("UIListLayout", housesListHolder)
+listLayout.Padding = UDim.new(0, 12)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+Instance.new("UIPadding", housesListHolder).PaddingTop = UDim.new(0,8)
+
+-- Make house card (no blue background)
+local function makeHouseCard(parent, titleText, itemCount, ownerText, idText, uidText)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, 0, 0, 84)
+    card.BackgroundColor3 = Color3.fromRGB(36,36,40)
+    card.BorderSizePixel = 0
+    card.Parent = parent
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,8)
+
+    local badgeLabel = Instance.new("TextLabel")
+    badgeLabel.Parent = card
+    badgeLabel.Size = UDim2.new(1, -16, 0, 20)
+    badgeLabel.Position = UDim2.new(0, 8, 0, 8)
+    badgeLabel.BackgroundTransparency = 1
+    badgeLabel.Text = titleText
+    badgeLabel.Font = Enum.Font.GothamBold
+    badgeLabel.TextSize = 14
+    badgeLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    badgeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local itemsLabel = Instance.new("TextLabel")
+    itemsLabel.Parent = card
+    itemsLabel.Position = UDim2.new(1, -108, 0, 10)
+    itemsLabel.Size = UDim2.new(0, 96, 0, 20)
+    itemsLabel.BackgroundTransparency = 1
+    itemsLabel.Text = tostring(itemCount) .. " items"
+    itemsLabel.Font = Enum.Font.Gotham
+    itemsLabel.TextSize = 12
+    itemsLabel.TextColor3 = Color3.fromRGB(210,210,210)
+    itemsLabel.TextXAlignment = Enum.TextXAlignment.Right
+
+    local lines = Instance.new("Frame")
+    lines.Parent = card
+    lines.Size = UDim2.new(1, -16, 0, 36)
+    lines.Position = UDim2.new(0, 12, 0, 38)
+    lines.BackgroundTransparency = 1
+
+    local idLabel = Instance.new("TextLabel")
+    idLabel.Parent = lines
+    idLabel.Size = UDim2.new(1, -110, 0, 12)
+    idLabel.Position = UDim2.new(0, 0, 0, 0)
+    idLabel.BackgroundTransparency = 1
+    idLabel.Text = "ID: " .. (idText or "Hidden")
+    idLabel.Font = Enum.Font.GothamBold
+    idLabel.TextSize = 13
+    idLabel.TextColor3 = Color3.fromRGB(235,235,235)
+    idLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local ownerLabel = Instance.new("TextLabel")
+    ownerLabel.Parent = lines
+    ownerLabel.Size = UDim2.new(1, -110, 0, 12)
+    ownerLabel.Position = UDim2.new(0, 0, 0, 12)
+    ownerLabel.BackgroundTransparency = 1
+    ownerLabel.Text = "Owner: " .. (ownerText or "Hidden")
+    ownerLabel.Font = Enum.Font.Gotham
+    ownerLabel.TextSize = 12
+    ownerLabel.TextColor3 = Color3.fromRGB(190,190,190)
+    ownerLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local uidLabel = Instance.new("TextLabel")
+    uidLabel.Parent = lines
+    uidLabel.Size = UDim2.new(1, -110, 0, 12)
+    uidLabel.Position = UDim2.new(0, 0, 0, 24)
+    uidLabel.BackgroundTransparency = 1
+    uidLabel.Text = "UID: " .. (uidText or "Hidden")
+    uidLabel.Font = Enum.Font.Gotham
+    uidLabel.TextSize = 12
+    uidLabel.TextColor3 = Color3.fromRGB(160,160,160)
+    uidLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local cloneBtn = Instance.new("TextButton")
+    cloneBtn.Parent = card
+    cloneBtn.Size = UDim2.new(0, 84, 0, 36)
+    cloneBtn.Position = UDim2.new(1, -100, 0, 34)
+    cloneBtn.Text = "CLONE"
+    cloneBtn.Font = Enum.Font.GothamBold
+    cloneBtn.TextSize = 14
+    cloneBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    cloneBtn.BackgroundColor3 = Color3.fromRGB(64, 200, 110)
+    cloneBtn.BorderSizePixel = 0
+    Instance.new("UICorner", cloneBtn).CornerRadius = UDim.new(0, 8)
+
+    cloneBtn.MouseButton1Click:Connect(function()
+        cloneBtn.Text = "CLONED"
+        task.delay(0.8, function() cloneBtn.Text = "CLONE" end)
+    end)
+end
+
+-- Populate player list
+local function getRandomUID() return tostring(math.random(1000,9999)) end
+local function getRandomItems() return math.random(25,80) end
+
+local function updatePlayersList()
+    for _, child in ipairs(housesListHolder:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
+    for _, player in ipairs(Players:GetPlayers()) do
+        makeHouseCard(housesListHolder, player.Name .. "'s House", getRandomItems(), player.Name, tostring(player.UserId), getRandomUID())
+    end
+    task.defer(function()
+        local count = 0
+        for _, v in ipairs(housesListHolder:GetChildren()) do
+            if v:IsA("Frame") then count = count + 1 end
+        end
+        housesListHolder.CanvasSize = UDim2.new(0,0,0, math.max(100*count + 12*(count-1),200))
+    end)
+end
+
+updatePlayersList()
+Players.PlayerAdded:Connect(updatePlayersList)
+Players.PlayerRemoving:Connect(updatePlayersList)
+
+-- Tab switching
+housesTab.MouseButton1Click:Connect(function()
+    housesFrame.Visible = true
+    infoFrame.Visible = false
+    housesTab.BackgroundColor3 = Color3.fromRGB(45,120,210)
+    housesTab.TextColor3 = Color3.fromRGB(255,255,255)
+    infoTab.BackgroundColor3 = Color3.fromRGB(36,36,40)
+    infoTab.TextColor3 = Color3.fromRGB(200,200,200)
+end)
+
+infoTab.MouseButton1Click:Connect(function()
+    housesFrame.Visible = false
+    infoFrame.Visible = true
+    infoTab.BackgroundColor3 = Color3.fromRGB(45,120,210)
+    infoTab.TextColor3 = Color3.fromRGB(255,255,255)
+    housesTab.BackgroundColor3 = Color3.fromRGB(36,36,40)
+    housesTab.TextColor3 = Color3.fromRGB(200,200,200)
+end)
+
+-- Dot buttons
+dotRed.MouseButton1Click:Connect(function()
+    screenGui.Enabled = false
+end)
+dotYellow.MouseButton1Click:Connect(function()
+    main.Visible = not main.Visible
+end)
+
+-- Draggable main frame
+local dragging = false
+local dragInput, mousePos, framePos
+
+local function updateDrag(input)
+    local delta = input.Position - mousePos
+    main.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X,
+                              framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+end
+
+main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        mousePos = input.Position
+        framePos = main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+main.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
