@@ -1,0 +1,55 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Redvyn/Red/refs/heads/main/Visual/Universel"))()
+
+local guiRoot
+
+repeat
+
+    guiRoot = game.CoreGui:FindFirstChild("b4d9e60345b03f91b9ce859c3e3f955ed6a3a785959f802de98af5c703339c68")
+
+    task.wait(0.1)
+
+until guiRoot
+
+local function waitForDesc(parent, name)
+
+    local obj = parent:FindFirstChild(name, true)
+
+    while not obj do
+
+        task.wait(0.1)
+
+        obj = parent:FindFirstChild(name, true)
+
+    end
+
+    return obj
+
+end
+
+local popups = waitForDesc(guiRoot, "Popups")
+
+local imageLabel = waitForDesc(popups, "ImageLabel")
+
+local textLabels = {}
+
+for _, v in ipairs(imageLabel:GetDescendants()) do
+
+    if v:IsA("TextLabel") then
+
+        table.insert(textLabels, v)
+
+    end
+
+end
+
+if #textLabels >= 2 then
+
+    textLabels[1].Text = "WhossJaradd Adopt Me Spawner"
+
+    textLabels[2].Text = "Made By WhossJaradd On YouTube!"
+
+else
+
+    warn("Not enough TextLabels found!")
+
+end
