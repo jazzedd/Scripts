@@ -1,0 +1,248 @@
+-- Since you're using this product for free, HttpGets are not available as it sends a request to our server which is resource-consuming; if you want to crack key systems, bypass sanity checks, bypass key systems, the premium option is for you (#buy-premium on our discord).
+-- This file was generated with UnveilR 2.1.7 at discord.gg/threaded or discord.gg/aqfudJEEeE (hookOp is on).
+
+local _ = (table and unpack)
+task.spawn(function(p1, p2, p3, p4)
+    local ReplicatedStorage = game.ReplicatedStorage
+    local Load = require(ReplicatedStorage:WaitForChild("Fsys")).load
+    fenv.set_thread_identity(2)
+    Load("KindDB")
+    local var7 = Load("RouterClient")
+    Load("DownloadClient")
+    Load("AnimationManager")
+    Load("new:PetRigs")
+    local var12 = fenv.set_thread_identity(8)
+    local Get = var7.get
+    var7.get = function(p1_2, p2_2, p3_2)
+        local var37 = p1_2[1]
+        -- false, eq id 1
+        local _ = ((var37 == "ToolAPI/Equip") and 14350779)
+        local _ = (var37 == "ToolAPI/Unequip")
+        -- false, eq id 2
+        -- false, eq id 3
+        local _ = ((var37 == "AdoptAPI/RidePet") and 13754357)
+        local _ = (var37 == "AdoptAPI/FlyPet")
+        -- false, eq id 4
+        local _ = (var37 == "AdoptAPI/ExitSeatStatesYield")
+        -- false, eq id 5
+        local _ = (var37 == "AdoptAPI/ExitSeatStates")
+        -- false, eq id 6
+        return var40
+    end
+    local var12 = Load("ClientData").get("pet_char_wrappers")
+    for i, v in pairs(var12) do
+        local var12 = Get("ToolAPI/Unequip")
+        var12:InvokeServer(v.pet_unique)
+    end
+    local var15 = require(ReplicatedStorage.Fsys).load("InventoryDB")
+    function fenv.GetPetByName(p1_3)
+        local var41 = p1_3[1]
+        local Pets = var15.pets
+        for i_2, v_2 in pairs(Pets) do
+            local Name = v_2.name
+            -- false, eq id 7
+            local _ = ((Name:lower() == var41:lower()) and 89646)
+        end
+        return false
+    end
+    local Loaded_Main_Lua = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+    Loaded_Main_Lua:Popup({
+        Title = "Adopt Me Spawner",
+        Buttons = {
+            {
+                Callback = function(p1_4, p2_4, p3_4, p4_4, p5_4)
+                end,
+                Title = "Cancel",
+                Variant = "Secondary",
+            },
+            {
+                Icon = "arrow-right",
+                Callback = function(p1_5, p2_5)
+                end,
+                Title = "Continue",
+                Variant = "Primary",
+            },
+        },
+        Content = "Made By WhossJaradd On Youtube!",
+        Icon = "scroll-text",
+        IconThemed = true,
+    })
+    wait()
+    Loaded_Main_Lua:Notify({
+        Icon = "loader",
+        Duration = 5,
+        Title = "Adopt Me Spawner Hub",
+        Content = "Loaded Successfully!",
+    })
+    local Window = Loaded_Main_Lua:CreateWindow({
+        User = {
+            Enabled = true,
+            Callback = function(p1_6, p2_6, p3_6, p4_6, p5_6)
+            end,
+            Anonymous = true,
+        },
+        Author = "https://discord.gg/n9pAsY8zhc",
+        ScrollBarEnabled = true,
+        Title = "Adopt Me Spawner",
+        Transparent = true,
+        SideBarWidth = 150,
+        Theme = "Dark",
+        Icon = "dog",
+        Size = UDim2.fromOffset(0, 0),
+    })
+    local Color3_FromHex = Color3.fromHex
+    Window:EditOpenButton({
+        StrokeThickness = 2,
+        Draggable = false,
+        Title = "Adopt Me Spawner",
+        Enabled = true,
+        Color = ColorSequence.new(Color3_FromHex("8B0000"), Color3_FromHex("4B0000")),
+        OnlyMobile = false,
+        Icon = "house",
+        CornerRadius = UDim.new(0, 16),
+    })
+    Window:SetToggleKey(Enum.KeyCode.K)
+    local Tab_2 = Window:Tab({
+        Icon = "cat",
+        Title = "Pets",
+        Desc = "Pet Spawner",
+    })
+    local Tab_4 = Window:Tab({
+        Icon = "dollar-sign",
+        Title = "Cash",
+        Desc = "Cash Spawner",
+    })
+    local Tab_6 = Window:Tab({
+        Icon = "users",
+        Title = "Discord",
+        Desc = "Copy our Discord invite",
+    })
+    Tab_6:Paragraph({
+        Color = "Blue",
+        Image = "users",
+        Title = "Join our Discord!",
+        Desc = "Click the button below to copy the invite link",
+    })
+    local _ = Tab_4:Paragraph({
+        Color = "Green",
+        Image = "circle-dollar-sign",
+        Title = "Cash Spawner",
+        Desc = "Enter the Amount of Cash and press Spawn",
+    })
+    Tab_4:Input({
+        InputIcon = "search",
+        Placeholder = "Enter amount",
+        Title = "Enter Amount",
+        Value = "",
+        Callback = function(p1_7, p2_7, p3_7, p4_7, p5_7, p6_7)
+            local var44 = p1_7[1]
+            task.spawn(function(p1_13, p2_13, p3_13, p4_13)
+            end)
+        end,
+    })
+    local _ = Tab_4:Button({
+        Callback = function(p1_8, p2_8, p3_8, p4_8, p5_8)
+            task.spawn(function()
+                local Not_Var44 = not var44;
+                -- false
+                local var44_eq_string = (var44 == "");
+                -- false, eq id 8
+                local var47 = (var44_eq_string and 10047227);
+                local var48 = tonumber(var44, nil);
+                -- no value
+                local var48_eq_nil = (var48 == nil);
+                -- true, eq id 9
+                local var49 = (var48_eq_nil and 13269000);
+                local Notify_3 = Loaded_Main_Lua.Notify;
+                local Notify_4 = Loaded_Main_Lua:Notify({
+                    Icon = "shield-alert",
+                    Duration = 3.5,
+                    Title = "Invalid Input",
+                    Content = "Please enter a valid whole number amount!",
+                });
+            end)
+        end,
+        Title = "Spawn",
+        Icon = "sparkles",
+    })
+    Tab_6:Button({
+        Callback = function(p1_9, p2_9, p3_9, p4_9, p5_9)
+            task.spawn(function()
+                fenv.setclipboard("https://discord.gg/aegZ2prZfF")
+                Loaded_Main_Lua:Notify({
+                    Icon = "clipboard-check",
+                    Duration = 2,
+                    Title = "Success",
+                    Content = "The Discord Link has been Copied to your Clipboard.",
+                })
+            end)
+        end,
+        Title = "Copy Invite",
+        Icon = "users",
+    })
+    local _ = Tab_2:Paragraph({
+        Color = "Blue",
+        Image = "cat",
+        Title = "Pet Spawner",
+        Desc = "Enter the pet name and choose pet type before Spawning",
+    })
+    Tab_2:Input({
+        InputIcon = "search",
+        Placeholder = "Enter pet name",
+        Title = "Pet Name",
+        Value = "",
+        Callback = function(p1_10, p2_10)
+            local var45 = p1_10[1]
+            task.spawn(function(p1_16, p2_16)
+            end)
+        end,
+    })
+    Tab_2:Dropdown({
+        Title = "Type",
+        Default = "MFR",
+        Multi = false,
+        Callback = function(p1_11, p2_11)
+            task.spawn(function(p1_17, p2_17, p3_17)
+            end)
+        end,
+        Values = {
+            "FR",
+            "NFR",
+            "MFR",
+        },
+    })
+    local _ = Tab_2:Button({
+        Callback = function()
+            task.spawn(function(p1_18, p2_18)
+                local Not_Var45 = not var45;
+                -- false
+                local var54 = (Not_Var45 and 14852525);
+                local var45_eq_string = (var45 == "");
+                -- false, eq id 10
+                local var55 = (var45_eq_string and 11783401);
+            local var56 = var45[1];
+                local Pets_2 = var15.pets;
+                for i_3, v_3 in pairs(Pets_2) do
+                    local Name_2 = v_3.name;
+                    local Lower_5 = Name_2.lower;
+                    local Lower_6 = Name_2:lower();
+            local Lower_7 = var56.lower;
+            local Lower_8 = var56:lower();
+                    local Lower_6_eq_Lower_8 = (Lower_6 == Lower_8);
+                    -- false, eq id 11
+                    local var58 = (Lower_6_eq_Lower_8 and 89646);
+                end
+                local Notify_7 = Loaded_Main_Lua.Notify;
+                local Notify_8 = Loaded_Main_Lua:Notify({
+                    Icon = "shield-alert",
+                    Duration = 2,
+                    Title = "Error",
+                    Content = "Pet Not Found Please Try Again",
+                });
+            end)
+            error("[script]: attempt to concatenate nil with string") -- Internal Error
+        end,
+        Title = "Spawn Pet",
+        Icon = "sparkles",
+    })
+end)
