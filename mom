@@ -1,0 +1,139 @@
+-- Shared Variables
+shared.LoaderTitle = "Follow @WhosJaraddd"
+shared.LoaderKeyFrames = {
+    [1] = {1, 25},   -- 1.25s mark
+    [2] = {2, 50},   -- 2.5s mark
+    [3] = {3, 75},   -- 3.75s mark
+    [4] = {4, 100}   -- 5s mark (end)
+}
+shared.LoaderSteps = {
+    [1] = " Initializing...",
+    [2] = " Fetching Data...",
+    [3] = " Decrypting...",
+    [4] = " Finalizing..."
+}
+
+-- Add blur effect
+local blur = Instance.new("BlurEffect")
+blur.Size = 15
+blur.Parent = game:GetService("Lighting")
+
+-- Create loader UI
+local function CreateLoaderUI()
+    -- ScreenGui
+    local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+    screenGui.Name = "LoaderUI"
+    screenGui.IgnoreGuiInset = true
+    screenGui.ResetOnSpawn = false
+
+    -- Mobile scaling
+    local uiScale = Instance.new("UIScale")
+    uiScale.Scale = 1
+    uiScale.Parent = screenGui
+
+    -- Tween utility
+    local function Tween(obj, time, props)
+        game:GetService("TweenService"):Create(obj, TweenInfo.new(time), props):Play()
+    end
+
+    -- Main Frame
+    local main = Instance.new("Frame")
+    main.Parent = screenGui
+    main.AnchorPoint = Vector2.new(0.5, 0.5)
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
+    main.Size = UDim2.new(0, 400, 0, 180)
+    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    main.BorderSizePixel = 0
+    main.ClipsDescendants = true
+    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+
+    -- User Image
+    local image = Instance.new("ImageLabel", main)
+    image.BackgroundTransparency = 1
+    image.Image = "rbxassetid://4575171289"
+    image.Position = UDim2.new(0, 15, 0, 10)
+    image.Size = UDim2.new(0, 50, 0, 50)
+    Instance.new("UICorner", image).CornerRadius = UDim.new(1, 0)
+
+    -- User name label
+    local name = Instance.new("TextLabel", main)
+    name.Text = "Tiktok: @WhosJaraddd"
+    name.Font = Enum.Font.GothamBold
+    name.TextColor3 = Color3.fromRGB(255, 255, 255)
+    name.TextSize = 14
+    name.TextXAlignment = Enum.TextXAlignment.Left
+    name.BackgroundTransparency = 1
+    name.Position = UDim2.new(0, 75, 0, 10)
+    name.Size = UDim2.new(0, 200, 0, 50)
+
+    -- Loader label
+    local top = Instance.new("TextLabel", main)
+    top.Text = "One Of The Best Script Loader"
+    top.Font = Enum.Font.Gotham
+    top.TextColor3 = Color3.fromRGB(200, 200, 200)
+    top.TextSize = 10
+    top.BackgroundTransparency = 1
+    top.Position = UDim2.new(0, 30, 0, 70)
+    top.Size = UDim2.new(1, -60, 0, 20)
+    top.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Title
+    local title = Instance.new("TextLabel", main)
+    title.Text = "<b>" .. shared.LoaderTitle .. "</b>"
+    title.Font = Enum.Font.Gotham
+    title.RichText = true
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0, 30, 0, 90)
+    title.Size = UDim2.new(1, -60, 0, 20)
+
+    -- Progress bar container
+    local bg = Instance.new("Frame", main)
+    bg.AnchorPoint = Vector2.new(0.5, 0)
+    bg.Position = UDim2.new(0.5, 0, 0, 120)
+    bg.Size = UDim2.new(0.85, 0, 0, 24)
+    bg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
+
+    -- Progress bar fill
+    local progress = Instance.new("Frame", bg)
+    progress.Size = UDim2.new(0, 0, 1, 0)
+    progress.BackgroundColor3 = Color3.fromRGB(130, 36, 212)
+    Instance.new("UICorner", progress).CornerRadius = UDim.new(0, 8)
+
+    -- Step label
+    local step = Instance.new("TextLabel", main)
+    step.Text = ""
+    step.Font = Enum.Font.Gotham
+    step.TextColor3 = Color3.fromRGB(200, 200, 200)
+    step.TextSize = 14
+    step.AnchorPoint = Vector2.new(0.5, 0.5)
+    step.Position = UDim2.new(0.5, 0, 1, -20)
+    step.Size = UDim2.new(1, -20, 0, 20)
+    step.BackgroundTransparency = 1
+    step.TextXAlignment = Enum.TextXAlignment.Center
+
+    -- Animate loading (5 seconds total)
+    task.spawn(function()
+        for index, data in ipairs(shared.LoaderKeyFrames) do
+            step.Text = shared.LoaderSteps[index] or ""
+            Tween(progress, 0.3, {
+                Size = UDim2.new(data[2] / 100, 0, 1, 0) -- ✅ correct scaling
+            })
+            task.wait(1.25) -- evenly spread across 5 seconds
+        end
+
+        -- Done loading
+        Tween(main, 0.3, {Size = UDim2.new(0, 0, 0, 0)})
+        Tween(blur, 0.5, {Size = 0})
+        task.wait(0.5)
+        screenGui:Destroy()
+        blur:Destroy()
+        -- ✅ Load your actual script
+        loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/8dd36f267c6c09d15846b84524cc68b1c9751d6d7f38c55a31e042ffa5376377/download"))()
+    end)
+end
+
+CreateLoaderUI()
