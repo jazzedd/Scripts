@@ -1,0 +1,171 @@
+-- Load WindUI (Latest Stable)
+local WindUI = loadstring(game:HttpGet(
+    "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
+))()
+
+-- Create Window
+local Window = WindUI:CreateWindow({
+    Title = "Adopt Me | House Cloner",
+    Icon = "home",
+    Author = "made by Jazradd",
+    Folder = "JazraddHouseCloner",
+    Theme = "Dark",
+    Size = UDim2.fromOffset(520, 420),
+    SideBarWidth = 150
+})
+
+Window:SetToggleKey(Enum.KeyCode.K)
+
+Window:EditOpenButton({
+    Title = "Open House Cloner",
+    Icon = "home",
+    Enabled = true,
+    Draggable = true
+})
+
+-------------------------------------------------------
+--                TABS
+-------------------------------------------------------
+
+local MainTab      = Window:Tab({Title = "Main", Icon = "home"})
+local CreateFileTab = Window:Tab({Title = "Create File", Icon = "file"})
+local TeleportTab   = Window:Tab({Title = "Teleport", Icon = "navigation"})
+local OthersTab     = Window:Tab({Title = "Others", Icon = "settings"})
+
+-------------------------------------------------------
+--                MAIN TAB
+-------------------------------------------------------
+
+local houseType = "micro_2023"
+local selectedHouse = nil
+
+MainTab:Paragraph({
+    Title = "House Cloner",
+    Desc  = "Clone, save, load and scan houses."
+})
+
+-- Dropdown: House Type
+MainTab:Dropdown({
+    Title = "Select House Type",
+    Values = {"micro_2023", "small_2023", "villa_2023"},
+    Multi = false,
+    Default = houseType,
+    Callback = function(option)
+        houseType = option
+        print("Selected house type:", option)
+    end
+})
+
+-- Dropdown: House Files
+MainTab:Dropdown({
+    Title = "Select House File",
+    Values = {"House1", "House2", "House3"}, -- Replace with your dynamic file list
+    Multi = false,
+    Default = "House1",
+    Callback = function(option)
+        selectedHouse = option
+        print("Selected file:", option)
+    end
+})
+
+-- Buttons
+MainTab:Button({
+    Title = "Refresh Files",
+    Icon = "refresh-ccw",
+    Callback = function()
+        print("Refreshing files...")
+    end
+})
+
+MainTab:Button({
+    Title = "Save House to File",
+    Icon = "save",
+    Callback = function()
+        print("Save house clicked.")
+    end
+})
+
+MainTab:Button({
+    Title = "Load House from File",
+    Icon = "folder-open",
+    Callback = function()
+        print("Load house clicked.")
+    end
+})
+
+MainTab:Button({
+    Title = "Scan House",
+    Icon = "search",
+    Callback = function()
+        print("Scanning house...")
+    end
+})
+
+-- Toggle: Paste Textures
+local pasteTextures = false
+
+MainTab:Toggle({
+    Title = "Paste Textures",
+    Default = false,
+    Callback = function(val)
+        pasteTextures = val
+        print("Paste textures:", val)
+    end
+})
+
+MainTab:Paragraph({
+    Title = "⚠️ Warning",
+    Desc = "Do not touch unless you know what you're doing."
+})
+
+-------------------------------------------------------
+--             CREATE FILE TAB
+-------------------------------------------------------
+
+CreateFileTab:Button({
+    Title = "Create New File",
+    Icon = "file-plus",
+    Callback = function()
+        print("Create new file clicked.")
+    end
+})
+
+-------------------------------------------------------
+--             TELEPORT TAB
+-------------------------------------------------------
+
+TeleportTab:Button({
+    Title = "Teleport to House",
+    Icon = "navigation",
+    Callback = function()
+        print("Teleport clicked.")
+    end
+})
+
+-------------------------------------------------------
+--             OTHERS TAB
+-------------------------------------------------------
+
+OthersTab:Toggle({
+    Title = "Enable Extra Features",
+    Default = false,
+    Callback = function(v)
+        print("Extra features:", v)
+    end
+})
+
+OthersTab:Button({
+    Title = "Reset GUI",
+    Icon = "x",
+    Callback = function()
+        Window:Destroy()
+        print("GUI Destroyed")
+    end
+})
+
+WindUI:Notify({
+    Title = "House Cloner Loaded",
+    Content = "Welcome to Jazradd Hub!",
+    Icon = "check",
+    Duration = 3
+})
