@@ -1,0 +1,552 @@
+-- Kuni Hub - Adopt Me Script
+-- NO KEY SYSTEM - Direct Load Version
+
+repeat task.wait(1) until game:IsLoaded()
+
+-- Services
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+
+-- Local Player
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Utility Functions
+local setclipboard = setclipboard or toclipboard
+
+-- Feature Toggles
+getgenv().AutoCandy = false
+getgenv().AutoGingerbread = false
+getgenv().AutoCollectGingerbread = false
+getgenv().AutoSnowballPug = false
+getgenv().AutoHumbug = false
+getgenv().AutoSleigh = false
+getgenv().Teleporting = false
+
+-- Notification Function
+local function Notify(message, duration)
+    duration = duration or 5
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Kuni Hub",
+        Text = message,
+        Duration = duration
+    })
+end
+
+-- Main Script Loader
+local function LoadMainScript()
+    Notify("Loading Kuni Hub...", 3)
+    
+    -- Load UI Library
+    local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+    
+    local Window = WindUI:CreateWindow({
+        Title = "Kuni Hub - Adopt Me",
+        Icon = "home",
+        Folder = "KuniHub",
+        Transparent = true
+    })
+    
+    -- Main Tab
+    local MainTab = Window:Tab({
+        Title = "Main",
+        Icon = "home"
+    })
+    
+    local VisualSection = MainTab:Section({
+        Title = "Visual Features"
+    })
+    
+    VisualSection:Button({
+        Title = "Mega Neon All Pets",
+        Desc = "Makes all pets in inventory appear as mega neon",
+        Callback = function()
+            pcall(function()
+                local ClientData = require(ReplicatedStorage.ClientModules.Core.ClientData)
+                for _, pet in pairs(ClientData.get_data()[tostring(LocalPlayer)].inventory.pets) do
+                    pet.properties.rideable = true
+                    pet.properties.flyable = true
+                    pet.properties.mega_neon = true
+                end
+                Notify("All pets set to Mega Neon!", 3)
+            end)
+        end
+    })
+    
+    -- Event Section
+    local EventSection = MainTab:Section({
+        Title = "Christmas Event"
+    })
+    
+    EventSection:Toggle({
+        Title = "Auto Farm Gingerbread",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoGingerbread = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoGingerbread do
+                        task.wait(0.1)
+                        pcall(function()
+                            local char = LocalPlayer.Character
+                            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                local christmas = workspace.Interiors:FindFirstChild("MainMap!Christmas")
+                                if christmas then
+                                    local closest = nil
+                                    local closestDist = math.huge
+                                    
+                                    for _, child in ipairs(christmas:GetChildren()) do
+                                        local gingerbread = child:FindFirstChild("GingerbreadMan")
+                                        if gingerbread and gingerbread:IsA("BasePart") then
+                                            local dist = (gingerbread.Position - hrp.Position).Magnitude
+                                            if dist < closestDist then
+                                                closestDist = dist
+                                                closest = gingerbread
+                                            end
+                                        end
+                                    end
+                                    
+                                    if closest then
+                                        hrp.CFrame = CFrame.new(closest.Position.X, closest.Position.Y + 2, closest.Position.Z)
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    EventSection:Toggle({
+        Title = "Auto Collect Gingerbread",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoCollectGingerbread = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoCollectGingerbread do
+                        task.wait(0.1)
+                        pcall(function()
+                            local remote = ReplicatedStorage.adoptme_new_net:FindFirstChild("adoptme_legacy_shared.ContentPacks.Winter2025.Game.IceSkating.IceSkatingNet:16")
+                            if remote then
+                                remote:FireServer()
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    EventSection:Toggle({
+        Title = "Auto Snowball Pug",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoSnowballPug = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoSnowballPug do
+                        task.wait(0.15)
+                        pcall(function()
+                            local api = ReplicatedStorage:FindFirstChild("API")
+                            if api then
+                                for _, child in pairs(api:GetChildren()) do
+                                    if child:IsA("RemoteFunction") then
+                                        child:InvokeServer(true)
+                                    elseif child:IsA("RemoteEvent") then
+                                        child:FireServer()
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    EventSection:Button({
+        Title = "Teleport to Train",
+        Desc = "Sit on the Christmas train",
+        Callback = function()
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = workspace["Merry Mistletroll"].PetModel.HumanoidRootPart.CFrame
+                ReplicatedStorage.adoptme_new_net:FindFirstChild("adoptme_legacy_shared.ContentPacks.Winter2025.Game.Train.WinterTrainNet:7"):FireServer({
+                    carriage = workspace.WinterTrainSeats.Seat
+                })
+            end)
+        end
+    })
+    
+    EventSection:Button({
+        Title = "Teleport to Christmas Spirit",
+        Callback = function()
+            pcall(function()
+                local spirit = workspace.Interiors["MainMap!Christmas"].Event.PetEntities:GetChildren()[2]
+                if spirit then
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = spirit.PetModel.MockParts.Head:GetPivot()
+                else
+                    Notify("Christmas Spirit not spawned yet", 5)
+                end
+            end)
+        end
+    })
+    
+    EventSection:Button({
+        Title = "Teleport to Maine Coon",
+        Callback = function()
+            pcall(function()
+                LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Interiors["MainMap!Christmas"].Event.Winter2025.Winter2025MaineCoonClient.PetModel.MockParts.Head:GetPivot()
+            end)
+        end
+    })
+    
+    EventSection:Button({
+        Title = "Finish Race",
+        Desc = "Complete penguin race automatically",
+        Callback = function()
+            pcall(function()
+                local christmas = workspace.Interiors["MainMap!Christmas"]
+                local hrp = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+                local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear)
+                
+                local gates = {}
+                for _, child in ipairs(christmas:GetChildren()) do
+                    if child.Name == "GateTemplate" then
+                        local ring = child:FindFirstChild("Ring")
+                        if ring and ring:IsA("BasePart") then
+                            table.insert(gates, ring)
+                        end
+                    end
+                end
+                
+                if #gates == 0 then
+                    Notify("Race not started! Talk to the Penguin first.", 5)
+                    return
+                end
+                
+                for _, gate in ipairs(gates) do
+                    if gate then
+                        local tween = TweenService:Create(hrp, tweenInfo, {
+                            CFrame = CFrame.new(gate.Position.X, gate.Position.Y + 2, gate.Position.Z)
+                        })
+                        tween:Play()
+                        tween.Completed:Wait()
+                    end
+                end
+                
+                Notify("Race completed!", 3)
+            end)
+        end
+    })
+    
+    -- Minigame Section
+    local MinigameSection = MainTab:Section({
+        Title = "Minigames"
+    })
+    
+    MinigameSection:Toggle({
+        Title = "Auto Play Sleighball",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoSleighball = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoSleighball do
+                        task.wait(0.25)
+                        pcall(function()
+                            local char = LocalPlayer.Character
+                            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                            if hrp then
+                                local interior = nil
+                                for _, child in ipairs(workspace.Interiors:GetChildren()) do
+                                    if child.Name:find("SleighballInterior") then
+                                        interior = child
+                                        break
+                                    end
+                                end
+                                
+                                if interior and interior:FindFirstChild("Game") then
+                                    local game = interior.Game
+                                    if game:FindFirstChild("Bin") and game:FindFirstChild("Goals") then
+                                        -- Get ball from bin
+                                        local ball = nil
+                                        for _, item in ipairs(game.Bin:GetDescendants()) do
+                                            if item:IsA("BasePart") then
+                                                ball = item
+                                                break
+                                            end
+                                        end
+                                        
+                                        if ball then
+                                            local tween = TweenService:Create(hrp, TweenInfo.new(0.45, Enum.EasingStyle.Linear), {
+                                                CFrame = ball.CFrame * CFrame.new(0, 3, 0)
+                                            })
+                                            tween:Play()
+                                            tween.Completed:Wait()
+                                            task.wait(0.15)
+                                            
+                                            -- Score in goals
+                                            local goals = {}
+                                            if game.Goals:FindFirstChild("GreenGoal") then
+                                                table.insert(goals, game.Goals.GreenGoal)
+                                            end
+                                            if game.Goals:FindFirstChild("RedGoal") then
+                                                table.insert(goals, game.Goals.RedGoal)
+                                            end
+                                            
+                                            for _, goal in ipairs(goals) do
+                                                if not getgenv().AutoSleighball then break end
+                                                tween = TweenService:Create(hrp, TweenInfo.new(0.4, Enum.EasingStyle.Linear), {
+                                                    CFrame = goal.CFrame * CFrame.new(0, 3, 0)
+                                                })
+                                                tween:Play()
+                                                tween.Completed:Wait()
+                                                firetouchinterest(hrp, goal, 0)
+                                                task.wait(0.1)
+                                                firetouchinterest(hrp, goal, 1)
+                                                task.wait(0.2)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    MinigameSection:Toggle({
+        Title = "Auto Join Sleighball (10s)",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoSleigh = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoSleigh do
+                        task.wait(0.5)
+                        pcall(function()
+                            if not getgenv().Teleporting then
+                                local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if hrp then
+                                    for _, label in pairs(PlayerGui:GetDescendants()) do
+                                        if label:IsA("TextLabel") and label.Visible then
+                                            local text = label.Text:lower()
+                                            if text:find("sleigh") and text:match("%d+:%d+") then
+                                                local min, sec = text:match("(%d+):(%d+)")
+                                                min = tonumber(min)
+                                                sec = tonumber(sec)
+                                                if min == 0 and sec and sec <= 10 and sec >= 1 then
+                                                    getgenv().Teleporting = true
+                                                    hrp.CFrame = CFrame.new(-78.3324432, 31.1505432, -1622.28735)
+                                                    task.wait(8)
+                                                    getgenv().Teleporting = false
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    MinigameSection:Toggle({
+        Title = "Auto Join Humbug (10s)",
+        Default = false,
+        Callback = function(value)
+            getgenv().AutoHumbug = value
+            if value then
+                task.spawn(function()
+                    while getgenv().AutoHumbug do
+                        task.wait(0.5)
+                        pcall(function()
+                            if not getgenv().Teleporting then
+                                local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                if hrp then
+                                    for _, label in pairs(PlayerGui:GetDescendants()) do
+                                        if label:IsA("TextLabel") and label.Visible then
+                                            local text = label.Text:lower()
+                                            if text:find("humbug") and text:match("%d+:%d+") then
+                                                local min, sec = text:match("(%d+):(%d+)")
+                                                min = tonumber(min)
+                                                sec = tonumber(sec)
+                                                if min == 0 and sec and sec <= 10 and sec >= 1 then
+                                                    getgenv().Teleporting = true
+                                                    hrp.CFrame = CFrame.new(-253.122971, 33.4183197, -1464.85608)
+                                                    task.wait(8)
+                                                    getgenv().Teleporting = false
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end)
+                    end
+                end)
+            end
+        end
+    })
+    
+    MinigameSection:Toggle({
+        Title = "Two Minigame Countdown",
+        Default = false,
+        Callback = function(value)
+            getgenv().DualCountdownRunning = value
+            
+            if value then
+                local guiName = "DualCountdownGUI"
+                if PlayerGui:FindFirstChild(guiName) then
+                    PlayerGui[guiName]:Destroy()
+                end
+                
+                local screenGui = Instance.new("ScreenGui")
+                screenGui.Name = guiName
+                screenGui.ResetOnSpawn = false
+                screenGui.Parent = PlayerGui
+                
+                local frame = Instance.new("Frame")
+                frame.Size = UDim2.new(0, 250, 0, 80)
+                frame.Position = UDim2.new(0.5, -125, 0.1, 0)
+                frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                frame.BackgroundTransparency = 0.3
+                frame.BorderSizePixel = 0
+                frame.Parent = screenGui
+                
+                Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+                
+                local sleighLabel = Instance.new("TextLabel")
+                sleighLabel.Size = UDim2.new(1, 0, 0, 35)
+                sleighLabel.Position = UDim2.new(0, 0, 0, 5)
+                sleighLabel.BackgroundTransparency = 1
+                sleighLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                sleighLabel.Font = Enum.Font.GothamBold
+                sleighLabel.TextSize = 18
+                sleighLabel.Text = "Sleighball: Waiting..."
+                sleighLabel.Parent = frame
+                
+                local humbugLabel = Instance.new("TextLabel")
+                humbugLabel.Size = UDim2.new(1, 0, 0, 35)
+                humbugLabel.Position = UDim2.new(0, 0, 0, 40)
+                humbugLabel.BackgroundTransparency = 1
+                humbugLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+                humbugLabel.Font = Enum.Font.GothamBold
+                humbugLabel.TextSize = 18
+                humbugLabel.Text = "Humbug: Waiting..."
+                humbugLabel.Parent = frame
+                
+                local function getTimer(zoneName)
+                    local interiors = workspace:FindFirstChild("Interiors")
+                    local christmas = interiors and interiors:FindFirstChild("MainMap!Christmas")
+                    local zone = christmas and christmas:FindFirstChild(zoneName)
+                    local billboard = zone and zone:FindFirstChild("Billboard")
+                    local gui = billboard and billboard:FindFirstChild("BillboardGui")
+                    local timer = gui and gui:FindFirstChild("TimerLabel")
+                    return timer and timer.Text or "N/A"
+                end
+                
+                task.spawn(function()
+                    while getgenv().DualCountdownRunning do
+                        task.wait(0.2)
+                        if not screenGui.Parent then break end
+                        sleighLabel.Text = "Sleighball: " .. getTimer("SleighballMinigameJoinZone")
+                        humbugLabel.Text = "Humbug: " .. getTimer("HumbugMinigameJoinZone")
+                    end
+                end)
+            else
+                if PlayerGui:FindFirstChild("DualCountdownGUI") then
+                    PlayerGui.DualCountdownGUI:Destroy()
+                end
+            end
+        end
+    })
+    
+    -- Utility Section
+    local UtilitySection = MainTab:Section({
+        Title = "Utilities"
+    })
+    
+    UtilitySection:Button({
+        Title = "Anti AFK",
+        Desc = "Prevents you from being kicked for idling",
+        Callback = function()
+            local VirtualUser = game:GetService("VirtualUser")
+            LocalPlayer.Idled:Connect(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+            Notify("Anti-AFK enabled!", 3)
+        end
+    })
+    
+    -- Info Tab
+    local InfoTab = Window:Tab({
+        Title = "Info",
+        Icon = "info"
+    })
+    
+    local CreditsSection = InfoTab:Section({
+        Title = "Credits"
+    })
+    
+    CreditsSection:Section({
+        Title = "Kuni Hub - Adopt Me",
+        TextSize = 24,
+        FontWeight = Enum.FontWeight.Bold
+    })
+    
+    CreditsSection:Section({
+        Title = "No Key System Version - Direct Load",
+        TextSize = 18,
+        TextTransparency = 0.3
+    })
+    
+    CreditsSection:Space({
+        Columns = 2,
+    })
+    
+    CreditsSection:Section({
+        Title = "Cleaned and optimized script for Adopt Me. Enjoy using Kuni Hub!",
+        TextSize = 16,
+        TextTransparency = 0.4
+    })
+    
+    local UpdatesSection = InfoTab:Section({
+        Title = "Features"
+    })
+    
+    UpdatesSection:Section({
+        Title = "Available Features:",
+        TextSize = 20,
+        FontWeight = Enum.FontWeight.SemiBold
+    })
+    
+    UpdatesSection:Space({
+        Columns = 1,
+    })
+    
+    UpdatesSection:Section({
+        Title = "• Mega Neon All Pets\n• Auto Farm Gingerbread\n• Auto Collect Gingerbread\n• Auto Snowball Pug\n• Auto Play Sleighball\n• Auto Join Minigames\n• Teleportation Features\n• Anti-AFK",
+        TextSize = 16,
+        TextTransparency = 0.35,
+        FontWeight = Enum.FontWeight.Medium
+    })
+    
+    Window:SelectTab(1)
+    Notify("Kuni Hub loaded successfully!", 3)
+end
+
+-- Initialize - Direct Load
+Notify("Welcome to Kuni Hub!", 2)
+task.wait(1)
+LoadMainScript()
