@@ -1,139 +1,234 @@
--- Shared Variables
-shared.LoaderTitle = "Follow @WhosJaraddd"
-shared.LoaderKeyFrames = {
-    [1] = {1, 25},   -- 1.25s mark
-    [2] = {2, 50},   -- 2.5s mark
-    [3] = {3, 75},   -- 3.75s mark
-    [4] = {4, 100}   -- 5s mark (end)
+-- Services
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Player
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "JaraddzHubLoader"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.DisplayOrder = 999
+screenGui.Parent = playerGui
+
+-- Container
+local container = Instance.new("Frame")
+container.AnchorPoint = Vector2.new(0.5, 0.5)
+container.Size = UDim2.new(0, 0, 0, 0)
+container.Position = UDim2.new(0.5, 0, 0.5, 0)
+container.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+container.BorderSizePixel = 0
+container.Parent = screenGui
+Instance.new("UICorner", container).CornerRadius = UDim.new(0, 20)
+
+-- Border
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(0, 255, 255)
+borderStroke.Thickness = 3
+borderStroke.Transparency = 0.2
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = container
+
+-- Logo
+local logoCircle = Instance.new("Frame")
+logoCircle.AnchorPoint = Vector2.new(0.5, 0)
+logoCircle.Size = UDim2.new(0, 70, 0, 70)
+logoCircle.Position = UDim2.new(0.5, 0, 0, 25)
+logoCircle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+logoCircle.BorderSizePixel = 0
+logoCircle.Parent = container
+Instance.new("UICorner", logoCircle).CornerRadius = UDim.new(0, 15)
+
+local logoInner = Instance.new("Frame")
+logoInner.AnchorPoint = Vector2.new(0.5, 0.5)
+logoInner.Size = UDim2.new(0, 58, 0, 58)
+logoInner.Position = UDim2.new(0.5, 0, 0.5, 0)
+logoInner.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+logoInner.BorderSizePixel = 0
+logoInner.Parent = logoCircle
+Instance.new("UICorner", logoInner).CornerRadius = UDim.new(0, 12)
+
+local logoText = Instance.new("TextLabel")
+logoText.Size = UDim2.new(1, 0, 1, 0)
+logoText.BackgroundTransparency = 1
+logoText.Text = "J"
+logoText.TextColor3 = Color3.fromRGB(0, 255, 255)
+logoText.TextSize = 36
+logoText.Font = Enum.Font.GothamBold
+logoText.Parent = logoInner
+
+-- Title & Version
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -40, 0, 35)
+title.Position = UDim2.new(0, 20, 0, 105)
+title.BackgroundTransparency = 1
+title.Text = "JARADDZ HUB"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 28
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Center
+title.Parent = container
+
+local versionText = Instance.new("TextLabel")
+versionText.Size = UDim2.new(1, -40, 0, 18)
+versionText.Position = UDim2.new(0, 20, 0, 140)
+versionText.BackgroundTransparency = 1
+versionText.Text = "Adopt Me Autominigames"
+versionText.TextColor3 = Color3.fromRGB(150, 150, 200)
+versionText.TextSize = 13
+versionText.Font = Enum.Font.Gotham
+versionText.TextXAlignment = Enum.TextXAlignment.Center
+versionText.Parent = container
+
+-- Progress Bar
+local progressBg = Instance.new("Frame")
+progressBg.Size = UDim2.new(1, -60, 0, 7)
+progressBg.Position = UDim2.new(0, 30, 0, 175)
+progressBg.BackgroundColor3 = Color3.fromRGB(30, 32, 38)
+progressBg.BorderSizePixel = 0
+progressBg.Parent = container
+Instance.new("UICorner", progressBg).CornerRadius = UDim.new(1, 0)
+
+local progressFill = Instance.new("Frame")
+progressFill.Size = UDim2.new(0, 0, 1, 0)
+progressFill.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+progressFill.BorderSizePixel = 0
+progressFill.Parent = progressBg
+Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+
+local progressGradient = Instance.new("UIGradient")
+progressGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 150, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255))
+})
+progressGradient.Rotation = 45
+progressGradient.Parent = progressFill
+
+local percentText = Instance.new("TextLabel")
+percentText.Size = UDim2.new(0, 100, 0, 28)
+percentText.Position = UDim2.new(0.5, -50, 0, 192)
+percentText.BackgroundTransparency = 1
+percentText.Text = "0%"
+percentText.TextColor3 = Color3.fromRGB(0, 255, 255)
+percentText.TextSize = 20
+percentText.Font = Enum.Font.GothamBold
+percentText.Parent = container
+
+-- Status Text
+local statusText = Instance.new("TextLabel")
+statusText.Size = UDim2.new(1, -40, 0, 20)
+statusText.Position = UDim2.new(0, 20, 0, 230)
+statusText.BackgroundTransparency = 1
+statusText.Text = "Initializing..."
+statusText.TextColor3 = Color3.fromRGB(150, 150, 200)
+statusText.TextSize = 12
+statusText.Font = Enum.Font.Code
+statusText.TextXAlignment = Enum.TextXAlignment.Center
+statusText.Parent = container
+
+-- Messages
+local messages = {
+    "Bypassing anti-cheat...",
+    "Injecting modules...",
+    "Decrypting data...",
+    "Configuring environment...",
+    "Loading UI..."
 }
-shared.LoaderSteps = {
-    [1] = " Initializing...",
-    [2] = " Fetching Data...",
-    [3] = " Decrypting...",
-    [4] = " Finalizing..."
-}
 
--- Add blur effect
-local blur = Instance.new("BlurEffect")
-blur.Size = 15
-blur.Parent = game:GetService("Lighting")
+-- Progress & Status Functions
+local currentPercent = 0
+local function updateProgress(target, duration)
+    local start = currentPercent
+    local t = 0
+    local conn
+    conn = RunService.RenderStepped:Connect(function(dt)
+        t += dt
+        local a = math.min(t / duration, 1)
+        local e = 1 - (1 - a)^3
+        currentPercent = start + (target - start) * e
+        progressFill.Size = UDim2.new(currentPercent / 100, 0, 1, 0)
+        percentText.Text = math.floor(currentPercent) .. "%"
+        if a >= 1 then conn:Disconnect() end
+    end)
+end
 
--- Create loader UI
-local function CreateLoaderUI()
-    -- ScreenGui
-    local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-    screenGui.Name = "LoaderUI"
-    screenGui.IgnoreGuiInset = true
-    screenGui.ResetOnSpawn = false
+local function updateStatus(text)
+    TweenService:Create(statusText, TweenInfo.new(0.15), {TextTransparency = 1}):Play()
+    task.wait(0.15)
+    statusText.Text = text
+    TweenService:Create(statusText, TweenInfo.new(0.15), {TextTransparency = 0}):Play()
+end
 
-    -- Mobile scaling
-    local uiScale = Instance.new("UIScale")
-    uiScale.Scale = 1
-    uiScale.Parent = screenGui
+-- Outro Transition
+local function playOutro()
+    local borderTween = TweenService:Create(borderStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1})
+    local containerTween1 = TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 480, 0, 300)
+    })
+    local containerTween2 = TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        BackgroundTransparency = 1
+    })
+    local fadeOutText1 = TweenService:Create(title, TweenInfo.new(0.25), {TextTransparency = 1})
+    local fadeOutText2 = TweenService:Create(versionText, TweenInfo.new(0.25), {TextTransparency = 1})
+    local fadeOutText3 = TweenService:Create(percentText, TweenInfo.new(0.25), {TextTransparency = 1})
+    local fadeOutText4 = TweenService:Create(statusText, TweenInfo.new(0.25), {TextTransparency = 1})
 
-    -- Tween utility
-    local function Tween(obj, time, props)
-        game:GetService("TweenService"):Create(obj, TweenInfo.new(time), props):Play()
-    end
+    containerTween1:Play()
+    task.wait(0.25)
+    containerTween2:Play()
+    borderTween:Play()
+    fadeOutText1:Play()
+    fadeOutText2:Play()
+    fadeOutText3:Play()
+    fadeOutText4:Play()
 
-    -- Main Frame
-    local main = Instance.new("Frame")
-    main.Parent = screenGui
-    main.AnchorPoint = Vector2.new(0.5, 0.5)
-    main.Position = UDim2.new(0.5, 0, 0.5, 0)
-    main.Size = UDim2.new(0, 400, 0, 180)
-    main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    main.BorderSizePixel = 0
-    main.ClipsDescendants = true
-    Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+    -- Shiny sweep
+    local shineSweep = Instance.new("Frame")
+    shineSweep.Size = UDim2.new(0, 0, 1, 0)
+    shineSweep.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    shineSweep.BackgroundTransparency = 0.7
+    shineSweep.BorderSizePixel = 0
+    shineSweep.Rotation = 25
+    shineSweep.Parent = container
+    Instance.new("UICorner", shineSweep).CornerRadius = UDim.new(1,0)
 
-    -- User Image
-    local image = Instance.new("ImageLabel", main)
-    image.BackgroundTransparency = 1
-    image.Image = "rbxassetid://4575171289"
-    image.Position = UDim2.new(0, 15, 0, 10)
-    image.Size = UDim2.new(0, 50, 0, 50)
-    Instance.new("UICorner", image).CornerRadius = UDim.new(1, 0)
+    TweenService:Create(shineSweep, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Size = UDim2.new(1.5, 0, 1, 0),
+        Position = UDim2.new(-0.25, 0, 0, 0),
+        BackgroundTransparency = 1
+    }):Play()
 
-    -- User name label
-    local name = Instance.new("TextLabel", main)
-    name.Text = "Tiktok: @WhosJaraddd"
-    name.Font = Enum.Font.GothamBold
-    name.TextColor3 = Color3.fromRGB(255, 255, 255)
-    name.TextSize = 14
-    name.TextXAlignment = Enum.TextXAlignment.Left
-    name.BackgroundTransparency = 1
-    name.Position = UDim2.new(0, 75, 0, 10)
-    name.Size = UDim2.new(0, 200, 0, 50)
+    task.wait(0.4)
+    screenGui:Destroy()
 
-    -- Loader label
-    local top = Instance.new("TextLabel", main)
-    top.Text = "One Of The Best Script Loader"
-    top.Font = Enum.Font.Gotham
-    top.TextColor3 = Color3.fromRGB(200, 200, 200)
-    top.TextSize = 10
-    top.BackgroundTransparency = 1
-    top.Position = UDim2.new(0, 30, 0, 70)
-    top.Size = UDim2.new(1, -60, 0, 20)
-    top.TextXAlignment = Enum.TextXAlignment.Left
-
-    -- Title
-    local title = Instance.new("TextLabel", main)
-    title.Text = "<b>" .. shared.LoaderTitle .. "</b>"
-    title.Font = Enum.Font.Gotham
-    title.RichText = true
-    title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    title.TextSize = 14
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.BackgroundTransparency = 1
-    title.Position = UDim2.new(0, 30, 0, 90)
-    title.Size = UDim2.new(1, -60, 0, 20)
-
-    -- Progress bar container
-    local bg = Instance.new("Frame", main)
-    bg.AnchorPoint = Vector2.new(0.5, 0)
-    bg.Position = UDim2.new(0.5, 0, 0, 120)
-    bg.Size = UDim2.new(0.85, 0, 0, 24)
-    bg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 8)
-
-    -- Progress bar fill
-    local progress = Instance.new("Frame", bg)
-    progress.Size = UDim2.new(0, 0, 1, 0)
-    progress.BackgroundColor3 = Color3.fromRGB(130, 36, 212)
-    Instance.new("UICorner", progress).CornerRadius = UDim.new(0, 8)
-
-    -- Step label
-    local step = Instance.new("TextLabel", main)
-    step.Text = ""
-    step.Font = Enum.Font.Gotham
-    step.TextColor3 = Color3.fromRGB(200, 200, 200)
-    step.TextSize = 14
-    step.AnchorPoint = Vector2.new(0.5, 0.5)
-    step.Position = UDim2.new(0.5, 0, 1, -20)
-    step.Size = UDim2.new(1, -20, 0, 20)
-    step.BackgroundTransparency = 1
-    step.TextXAlignment = Enum.TextXAlignment.Center
-
-    -- Animate loading (5 seconds total)
-    task.spawn(function()
-        for index, data in ipairs(shared.LoaderKeyFrames) do
-            step.Text = shared.LoaderSteps[index] or ""
-            Tween(progress, 0.3, {
-                Size = UDim2.new(data[2] / 100, 0, 1, 0) -- ✅ correct scaling
-            })
-            task.wait(1.25) -- evenly spread across 5 seconds
-        end
-
-        -- Done loading
-        Tween(main, 0.3, {Size = UDim2.new(0, 0, 0, 0)})
-        Tween(blur, 0.5, {Size = 0})
-        task.wait(0.5)
-        screenGui:Destroy()
-        blur:Destroy()
-        -- ✅ Load your actual script
+    -- Execute your script here
+    pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/TrGhann/dibuhhh/refs/heads/main/kukinlpoh"))()
     end)
 end
 
-CreateLoaderUI()
+-- Animate container in
+TweenService:Create(container, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 420, 0, 260)
+}):Play()
+
+-- Loader Task
+task.spawn(function()
+    local totalTime = 5
+    local step = totalTime / #messages
+    for i, msg in ipairs(messages) do
+        updateStatus(msg)
+        updateProgress((i / #messages) * 100, step * 0.9)
+        task.wait(step)
+    end
+    updateStatus("Launching...")
+    updateProgress(100, 0.25)
+    task.wait(0.25)
+    playOutro()
+end)
