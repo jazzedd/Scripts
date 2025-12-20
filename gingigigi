@@ -1,4 +1,4 @@
--- Kuni Hub - Adopt Me Script
+-- Jaraddz Hub - Adopt Me Script
 -- NO KEY SYSTEM - Direct Load Version
 
 repeat task.wait(1) until game:IsLoaded()
@@ -29,7 +29,7 @@ getgenv().Teleporting = false
 local function Notify(message, duration)
     duration = duration or 5
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Kuni Hub",
+        Title = "Jaraddz Hub",
         Text = message,
         Duration = duration
     })
@@ -37,15 +37,15 @@ end
 
 -- Main Script Loader
 local function LoadMainScript()
-    Notify("Loading Kuni Hub...", 3)
+    Notify("Loading Jaraddz Hub...", 3)
     
     -- Load UI Library
     local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
     
     local Window = WindUI:CreateWindow({
-        Title = "Kuni Hub - Adopt Me",
+        Title = "Jaraddz Hub - Adopt Me",
         Icon = "home",
-        Folder = "KuniHub",
+        Folder = "JaraddzHub",
         Transparent = true
     })
     
@@ -500,7 +500,7 @@ local function LoadMainScript()
     })
     
     CreditsSection:Section({
-        Title = "Kuni Hub - Adopt Me",
+        Title = "Jaraddz Hub - Adopt Me",
         TextSize = 24,
         FontWeight = Enum.FontWeight.Bold
     })
@@ -516,7 +516,7 @@ local function LoadMainScript()
     })
     
     CreditsSection:Section({
-        Title = "Cleaned and optimized script for Adopt Me. Enjoy using Kuni Hub!",
+        Title = "Cleaned and optimized script for Adopt Me. Enjoy using Jaraddz Hub!",
         TextSize = 16,
         TextTransparency = 0.4
     })
@@ -543,10 +543,10 @@ local function LoadMainScript()
     })
     
     Window:SelectTab(1)
-    Notify("Kuni Hub loaded successfully!", 3)
+    Notify("Jaraddz Hub loaded successfully!", 3)
 end
 
 -- Initialize - Direct Load
-Notify("Welcome to Kuni Hub!", 2)
+Notify("Welcome to Jaraddz Hub!", 2)
 task.wait(1)
 LoadMainScript()
