@@ -9,7 +9,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 
 -- ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "JaraddzHubLoader"
+screenGui.Name = "JazradHubLoader"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.DisplayOrder = 999
@@ -66,7 +66,7 @@ local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, -40, 0, 35)
 title.Position = UDim2.new(0, 20, 0, 105)
 title.BackgroundTransparency = 1
-title.Text = "JARADDZ HUB"
+title.Text = "JAZRAD HUB"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextSize = 28
 title.Font = Enum.Font.GothamBold
