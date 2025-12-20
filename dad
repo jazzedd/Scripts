@@ -132,7 +132,7 @@ local function CreateLoaderUI()
         screenGui:Destroy()
         blur:Destroy()
         -- ✅ Load your actual script
-        loadstring(game:HttpGet("https://api.junkie-development.de/api/v1/luascripts/public/8dd36f267c6c09d15846b84524cc68b1c9751d6d7f38c55a31e042ffa5376377/download"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/TrGhann/dibuhhh/refs/heads/main/kukinlpoh"))()
     end)
 end
 
