@@ -1,234 +1,253 @@
--- Services
+--// Services
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
--- Player
+--// Player
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- ScreenGui
+--// ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "JazradHubLoader"
 screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.IgnoreGuiInset = true
 screenGui.DisplayOrder = 999
 screenGui.Parent = playerGui
 
--- Container
+--// Background
+local bgBlur = Instance.new("Frame")
+bgBlur.Size = UDim2.new(1,0,1,0)
+bgBlur.BackgroundColor3 = Color3.fromRGB(10,10,20)
+bgBlur.BackgroundTransparency = 1
+bgBlur.BorderSizePixel = 0
+bgBlur.Parent = screenGui
+
+--// Particles
+for i = 1,20 do
+    local p = Instance.new("Frame")
+    p.Size = UDim2.new(0,math.random(2,4),0,math.random(2,4))
+    p.Position = UDim2.new(math.random(),0,math.random(),0)
+    p.BackgroundColor3 = Color3.fromRGB(0,191,255)
+    p.BackgroundTransparency = math.random(50,80)/100
+    p.BorderSizePixel = 0
+    p.Parent = bgBlur
+    Instance.new("UICorner",p).CornerRadius = UDim.new(1,0)
+
+    task.spawn(function()
+        while p.Parent do
+            TweenService:Create(
+                p,
+                TweenInfo.new(math.random(3,6),Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),
+                {Position = UDim2.new(p.Position.X.Scale,0,math.random(),0)}
+            ):Play()
+            task.wait(math.random(3,6))
+        end
+    end)
+end
+
+--// Main Container
 local container = Instance.new("Frame")
-container.AnchorPoint = Vector2.new(0.5, 0.5)
-container.Size = UDim2.new(0, 0, 0, 0)
-container.Position = UDim2.new(0.5, 0, 0.5, 0)
-container.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+container.AnchorPoint = Vector2.new(0.5,0.5)
+container.Position = UDim2.new(0.5,0,0.5,0)
+container.Size = UDim2.new(0,0,0,0)
+container.BackgroundColor3 = Color3.fromRGB(15,15,25)
 container.BorderSizePixel = 0
 container.Parent = screenGui
-Instance.new("UICorner", container).CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner",container).CornerRadius = UDim.new(0,24)
 
--- Border
-local borderStroke = Instance.new("UIStroke")
-borderStroke.Color = Color3.fromRGB(0, 255, 255)
-borderStroke.Thickness = 3
-borderStroke.Transparency = 0.2
-borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-borderStroke.Parent = container
+--// Glass
+local glass = Instance.new("Frame")
+glass.Size = UDim2.new(1,0,1,0)
+glass.BackgroundColor3 = Color3.new(1,1,1)
+glass.BackgroundTransparency = 0.97
+glass.Parent = container
+Instance.new("UICorner",glass).CornerRadius = UDim.new(0,24)
 
--- Logo
-local logoCircle = Instance.new("Frame")
-logoCircle.AnchorPoint = Vector2.new(0.5, 0)
-logoCircle.Size = UDim2.new(0, 70, 0, 70)
-logoCircle.Position = UDim2.new(0.5, 0, 0, 25)
-logoCircle.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
-logoCircle.BorderSizePixel = 0
-logoCircle.Parent = container
-Instance.new("UICorner", logoCircle).CornerRadius = UDim.new(0, 15)
+--// Glow
+local glow = Instance.new("ImageLabel")
+glow.Size = UDim2.new(1,40,1,40)
+glow.Position = UDim2.new(0.5,0,0.5,0)
+glow.AnchorPoint = Vector2.new(0.5,0.5)
+glow.Image = "rbxassetid://5028857084"
+glow.ImageColor3 = Color3.fromRGB(0,191,255)
+glow.ImageTransparency = 0.4
+glow.BackgroundTransparency = 1
+glow.ScaleType = Enum.ScaleType.Slice
+glow.SliceCenter = Rect.new(24,24,276,276)
+glow.Parent = container
 
-local logoInner = Instance.new("Frame")
-logoInner.AnchorPoint = Vector2.new(0.5, 0.5)
-logoInner.Size = UDim2.new(0, 58, 0, 58)
-logoInner.Position = UDim2.new(0.5, 0, 0.5, 0)
-logoInner.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-logoInner.BorderSizePixel = 0
-logoInner.Parent = logoCircle
-Instance.new("UICorner", logoInner).CornerRadius = UDim.new(0, 12)
+task.spawn(function()
+    while glow.Parent do
+        TweenService:Create(glow,TweenInfo.new(1.5,Enum.EasingStyle.Sine),{ImageTransparency=0.7}):Play()
+        task.wait(1.5)
+        TweenService:Create(glow,TweenInfo.new(1.5,Enum.EasingStyle.Sine),{ImageTransparency=0.3}):Play()
+        task.wait(1.5)
+    end
+end)
 
-local logoText = Instance.new("TextLabel")
-logoText.Size = UDim2.new(1, 0, 1, 0)
-logoText.BackgroundTransparency = 1
-logoText.Text = "J"
-logoText.TextColor3 = Color3.fromRGB(0, 255, 255)
-logoText.TextSize = 36
-logoText.Font = Enum.Font.GothamBold
-logoText.Parent = logoInner
+--// Border
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2.5
+stroke.Parent = container
 
--- Title & Version
+local grad = Instance.new("UIGradient")
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0,Color3.fromRGB(0,150,255)),
+    ColorSequenceKeypoint.new(0.5,Color3.fromRGB(0,191,255)),
+    ColorSequenceKeypoint.new(1,Color3.fromRGB(100,220,255))
+}
+grad.Parent = stroke
+
+task.spawn(function()
+    while grad.Parent do
+        for i=0,360,2 do
+            grad.Rotation=i
+            task.wait(0.02)
+        end
+    end
+end)
+
+--// Logo
+local logo = Instance.new("TextLabel")
+logo.Size = UDim2.new(0,100,0,100)
+logo.Position = UDim2.new(0.5,-50,0,35)
+logo.BackgroundColor3 = Color3.fromRGB(0,191,255)
+logo.Text = "J"
+logo.TextSize = 48
+logo.Font = Enum.Font.GothamBold
+logo.TextColor3 = Color3.fromRGB(15,15,25)
+logo.Parent = container
+Instance.new("UICorner",logo).CornerRadius = UDim.new(0,20)
+
+--// Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -40, 0, 35)
-title.Position = UDim2.new(0, 20, 0, 105)
+title.Size = UDim2.new(1,-50,0,45)
+title.Position = UDim2.new(0,25,0,150)
 title.BackgroundTransparency = 1
 title.Text = "JAZRAD HUB"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 28
 title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Center
+title.TextSize = 38
+title.TextColor3 = Color3.new(1,1,1)
 title.Parent = container
 
-local versionText = Instance.new("TextLabel")
-versionText.Size = UDim2.new(1, -40, 0, 18)
-versionText.Position = UDim2.new(0, 20, 0, 140)
-versionText.BackgroundTransparency = 1
-versionText.Text = "Adopt Me Autominigames"
-versionText.TextColor3 = Color3.fromRGB(150, 150, 200)
-versionText.TextSize = 13
-versionText.Font = Enum.Font.Gotham
-versionText.TextXAlignment = Enum.TextXAlignment.Center
-versionText.Parent = container
+--// Version
+local version = Instance.new("TextLabel")
+version.Size = UDim2.new(0,120,0,28)
+version.Position = UDim2.new(0.5,-60,0,198)
+version.BackgroundColor3 = Color3.fromRGB(0,191,255)
+version.Text = "v1.7.0"
+version.TextColor3 = Color3.new(1,1,1)
+version.Font = Enum.Font.GothamBold
+version.TextSize = 14
+version.Parent = container
+Instance.new("UICorner",version).CornerRadius = UDim.new(0,14)
 
--- Progress Bar
+--// Progress
 local progressBg = Instance.new("Frame")
-progressBg.Size = UDim2.new(1, -60, 0, 7)
-progressBg.Position = UDim2.new(0, 30, 0, 175)
-progressBg.BackgroundColor3 = Color3.fromRGB(30, 32, 38)
-progressBg.BorderSizePixel = 0
+progressBg.Size = UDim2.new(1,-60,0,10)
+progressBg.Position = UDim2.new(0,30,0,245)
+progressBg.BackgroundColor3 = Color3.fromRGB(25,25,40)
+progressBg.ClipsDescendants = true
 progressBg.Parent = container
-Instance.new("UICorner", progressBg).CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner",progressBg).CornerRadius = UDim.new(1,0)
 
 local progressFill = Instance.new("Frame")
-progressFill.Size = UDim2.new(0, 0, 1, 0)
-progressFill.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
-progressFill.BorderSizePixel = 0
+progressFill.Size = UDim2.new(0,0,1,0)
+progressFill.BackgroundColor3 = Color3.fromRGB(0,191,255)
+progressFill.ClipsDescendants = true
 progressFill.Parent = progressBg
-Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner",progressFill).CornerRadius = UDim.new(1,0)
 
-local progressGradient = Instance.new("UIGradient")
-progressGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 150, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 255, 255))
-})
-progressGradient.Rotation = 45
-progressGradient.Parent = progressFill
+local shimmer = Instance.new("Frame")
+shimmer.Size = UDim2.new(0,50,1,0)
+shimmer.Position = UDim2.new(0,-50,0,0)
+shimmer.BackgroundColor3 = Color3.new(1,1,1)
+shimmer.BackgroundTransparency = 0.5
+shimmer.Parent = progressFill
 
-local percentText = Instance.new("TextLabel")
-percentText.Size = UDim2.new(0, 100, 0, 28)
-percentText.Position = UDim2.new(0.5, -50, 0, 192)
-percentText.BackgroundTransparency = 1
-percentText.Text = "0%"
-percentText.TextColor3 = Color3.fromRGB(0, 255, 255)
-percentText.TextSize = 20
-percentText.Font = Enum.Font.GothamBold
-percentText.Parent = container
+task.spawn(function()
+    while shimmer.Parent do
+        TweenService:Create(shimmer,TweenInfo.new(1.2,Enum.EasingStyle.Linear),{
+            Position = UDim2.new(1,0,0,0)
+        }):Play()
+        task.wait(1.2)
+        shimmer.Position = UDim2.new(0,-50,0,0)
+    end
+end)
 
--- Status Text
-local statusText = Instance.new("TextLabel")
-statusText.Size = UDim2.new(1, -40, 0, 20)
-statusText.Position = UDim2.new(0, 20, 0, 230)
-statusText.BackgroundTransparency = 1
-statusText.Text = "Initializing..."
-statusText.TextColor3 = Color3.fromRGB(150, 150, 200)
-statusText.TextSize = 12
-statusText.Font = Enum.Font.Code
-statusText.TextXAlignment = Enum.TextXAlignment.Center
-statusText.Parent = container
+local percent = Instance.new("TextLabel")
+percent.Size = UDim2.new(1,0,0,30)
+percent.Position = UDim2.new(0,0,0,260)
+percent.BackgroundTransparency = 1
+percent.Text = "0%"
+percent.Font = Enum.Font.GothamBold
+percent.TextSize = 26
+percent.TextColor3 = Color3.fromRGB(0,191,255)
+percent.Parent = container
 
--- Messages
-local messages = {
-    "Bypassing anti-cheat...",
-    "Injecting modules...",
-    "Decrypting data...",
-    "Configuring environment...",
-    "Loading UI..."
-}
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1,0,0,24)
+status.Position = UDim2.new(0,0,0,300)
+status.BackgroundTransparency = 1
+status.Text = "Initializing"
+status.Font = Enum.Font.GothamMedium
+status.TextSize = 14
+status.TextColor3 = Color3.fromRGB(150,170,200)
+status.Parent = container
 
--- Progress & Status Functions
-local currentPercent = 0
-local function updateProgress(target, duration)
-    local start = currentPercent
+--// Footer
+local footer = Instance.new("TextLabel")
+footer.Size = UDim2.new(1,0,0,18)
+footer.Position = UDim2.new(0,0,1,-28)
+footer.BackgroundTransparency = 1
+footer.Text = "Made by Jazrad"
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 11
+footer.TextColor3 = Color3.fromRGB(100,100,130)
+footer.Parent = container
+
+--// Loading Logic (3 seconds)
+local steps = {"Connecting","Verifying","Loading","Finalizing"}
+local current = 0
+
+local function setProgress(target,dur)
+    local start = current
     local t = 0
-    local conn
-    conn = RunService.RenderStepped:Connect(function(dt)
+    local c; c = RunService.RenderStepped:Connect(function(dt)
         t += dt
-        local a = math.min(t / duration, 1)
-        local e = 1 - (1 - a)^3
-        currentPercent = start + (target - start) * e
-        progressFill.Size = UDim2.new(currentPercent / 100, 0, 1, 0)
-        percentText.Text = math.floor(currentPercent) .. "%"
-        if a >= 1 then conn:Disconnect() end
+        local a = math.min(t/dur,1)
+        current = start + (target-start)*a
+        progressFill.Size = UDim2.new(current/100,0,1,0)
+        percent.Text = math.floor(current).."%"
+        if a >= 1 then c:Disconnect() end
     end)
 end
 
-local function updateStatus(text)
-    TweenService:Create(statusText, TweenInfo.new(0.15), {TextTransparency = 1}):Play()
-    task.wait(0.15)
-    statusText.Text = text
-    TweenService:Create(statusText, TweenInfo.new(0.15), {TextTransparency = 0}):Play()
-end
-
--- Outro Transition
-local function playOutro()
-    local borderTween = TweenService:Create(borderStroke, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1})
-    local containerTween1 = TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 480, 0, 300)
-    })
-    local containerTween2 = TweenService:Create(container, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-        Size = UDim2.new(0, 0, 0, 0),
-        BackgroundTransparency = 1
-    })
-    local fadeOutText1 = TweenService:Create(title, TweenInfo.new(0.25), {TextTransparency = 1})
-    local fadeOutText2 = TweenService:Create(versionText, TweenInfo.new(0.25), {TextTransparency = 1})
-    local fadeOutText3 = TweenService:Create(percentText, TweenInfo.new(0.25), {TextTransparency = 1})
-    local fadeOutText4 = TweenService:Create(statusText, TweenInfo.new(0.25), {TextTransparency = 1})
-
-    containerTween1:Play()
-    task.wait(0.25)
-    containerTween2:Play()
-    borderTween:Play()
-    fadeOutText1:Play()
-    fadeOutText2:Play()
-    fadeOutText3:Play()
-    fadeOutText4:Play()
-
-    -- Shiny sweep
-    local shineSweep = Instance.new("Frame")
-    shineSweep.Size = UDim2.new(0, 0, 1, 0)
-    shineSweep.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    shineSweep.BackgroundTransparency = 0.7
-    shineSweep.BorderSizePixel = 0
-    shineSweep.Rotation = 25
-    shineSweep.Parent = container
-    Instance.new("UICorner", shineSweep).CornerRadius = UDim.new(1,0)
-
-    TweenService:Create(shineSweep, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Size = UDim2.new(1.5, 0, 1, 0),
-        Position = UDim2.new(-0.25, 0, 0, 0),
-        BackgroundTransparency = 1
-    }):Play()
-
-    task.wait(0.4)
-    screenGui:Destroy()
-
-    -- Execute your script here
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/TrGhann/dibuhhh/refs/heads/main/kukinlpoh"))()
-    end)
-end
-
--- Animate container in
-TweenService:Create(container, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-    Size = UDim2.new(0, 420, 0, 260)
+--// Intro
+TweenService:Create(bgBlur,TweenInfo.new(0.4),{BackgroundTransparency=0.1}):Play()
+TweenService:Create(container,TweenInfo.new(0.6,Enum.EasingStyle.Back),{
+    Size = UDim2.new(0,500,0,360)
 }):Play()
 
--- Loader Task
 task.spawn(function()
-    local totalTime = 5
-    local step = totalTime / #messages
-    for i, msg in ipairs(messages) do
-        updateStatus(msg)
-        updateProgress((i / #messages) * 100, step * 0.9)
+    local step = 3.5/#steps
+    for i,v in ipairs(steps) do
+        status.Text = v
+        setProgress((i/#steps)*100,step)
         task.wait(step)
     end
-    updateStatus("Launching...")
-    updateProgress(100, 0.25)
-    task.wait(0.25)
-    playOutro()
+
+    -- Outro
+    TweenService:Create(container,TweenInfo.new(0.5),{BackgroundTransparency=1}):Play()
+    TweenService:Create(bgBlur,TweenInfo.new(0.3),{BackgroundTransparency=1}):Play()
+    TweenService:Create(glow,TweenInfo.new(0.5),{ImageTransparency=1}):Play()
+
+    task.wait(0.5)
+    screenGui:Destroy()
+
+    -- LOAD HUB
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/jazzedd/Scripts/refs/heads/main/dad"))()
+    end)
 end)
