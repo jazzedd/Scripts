@@ -1,290 +1,988 @@
+-- Trade Freeze GUI 🔒 Premium Edition
+-- Enhanced with player selection system
+-- Optimized and refactored for performance
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
 
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "JaradScriptGui"
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- ============================================================================
+-- CONFIGURATION
+-- ============================================================================
+local CONFIG = {
+	GUI_SIZE = Vector2.new(360, 450),
+	ANIMATION_SPEED = 0.3,
+	NOTIFICATION_DURATION = 3.5,
+	COLORS = {
+		PRIMARY = Color3.fromRGB(120, 150, 255),
+		SUCCESS = Color3.fromRGB(100, 220, 150),
+		ERROR = Color3.fromRGB(255, 100, 100),
+		BACKGROUND = Color3.fromRGB(245, 245, 255),
+		TEXT_PRIMARY = Color3.fromRGB(60, 60, 100),
+		TEXT_SECONDARY = Color3.fromRGB(100, 100, 140),
+		BORDER = Color3.fromRGB(255, 255, 255),
+		TOGGLE_OFF = Color3.fromRGB(180, 180, 200),
+		MAC_RED = Color3.fromRGB(255, 95, 86),
+		MAC_YELLOW = Color3.fromRGB(255, 189, 46),
+		MAC_GREEN = Color3.fromRGB(40, 201, 64),
+		PLAYER_CARD = Color3.fromRGB(255, 255, 255),
+		SELECTED = Color3.fromRGB(140, 180, 255)
+	}
+}
 
--- Main Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 230)
-frame.Position = UDim2.new(0.5, -150, 0.5, -115)
-frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
-frame.ClipsDescendants = true
-frame.AnchorPoint = Vector2.new(0.5, 0.5)
+-- ============================================================================
+-- STATE MANAGEMENT
+-- ============================================================================
+local State = {
+	selectedPlayer = nil,
+	isOn = false,
+	isMinimized = false,
+	petsOffered = false
+}
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = frame
+-- ============================================================================
+-- UTILITY FUNCTIONS
+-- ============================================================================
+local Util = {}
 
--- Draggable functionality
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                               startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+function Util.createCorner(parent, radius)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 12)
+	corner.Parent = parent
+	return corner
 end
 
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
+function Util.createStroke(parent, color, thickness, transparency)
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = color or CONFIG.COLORS.BORDER
+	stroke.Thickness = thickness or 1
+	stroke.Transparency = transparency or 0.8
+	stroke.Parent = parent
+	return stroke
+end
 
-frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
+function Util.createGradient(parent, colors, rotation, transparency)
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new(colors)
+	gradient.Rotation = rotation or 135
+	if transparency then
+		gradient.Transparency = NumberSequence.new(transparency)
+	end
+	gradient.Parent = parent
+	return gradient
+end
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
+function Util.tween(obj, props, duration, style, delay)
+	local tweenInfo = TweenInfo.new(
+		duration or CONFIG.ANIMATION_SPEED,
+		style or Enum.EasingStyle.Quad,
+		Enum.EasingDirection.Out,
+		0,
+		false,
+		delay or 0
+	)
+	local tween = TweenService:Create(obj, tweenInfo, props)
+	tween:Play()
+	return tween
+end
 
--- Close (X) Button
+function Util.pulseEffect(obj, property, startValue, endValue, duration)
+	local tween1 = Util.tween(obj, {[property] = endValue}, duration or 0.5)
+	tween1.Completed:Connect(function()
+		Util.tween(obj, {[property] = startValue}, duration or 0.5)
+	end)
+end
+
+function Util.getPlayerThumbnail(userId)
+	return "https://www.roblox.com/headshot-thumbnail/image?userId=" .. userId .. "&width=48&height=48&format=png"
+end
+
+-- ============================================================================
+-- NOTIFICATION SYSTEM
+-- ============================================================================
+local NotificationManager = {}
+NotificationManager.container = nil
+
+function NotificationManager.init(parent)
+	local container = Instance.new("Frame")
+	container.Name = "NotificationContainer"
+	container.Size = UDim2.new(0, 310, 1, 0)
+	container.Position = UDim2.new(1, -320, 0, 0)
+	container.BackgroundTransparency = 1
+	container.Parent = parent
+	NotificationManager.container = container
+end
+
+function NotificationManager.show(text, notifType)
+	if not NotificationManager.container then return end
+	
+	local isError = notifType == "error"
+	local notif = Instance.new("Frame")
+	notif.Size = UDim2.new(1, 0, 0, 65)
+	notif.BackgroundColor3 = Color3.fromRGB(250, 250, 255)
+	notif.BackgroundTransparency = 0.15
+	notif.BorderSizePixel = 0
+	notif.Parent = NotificationManager.container
+	Util.createCorner(notif, 13)
+	Util.createStroke(notif, CONFIG.COLORS.BORDER, 2, 0.7)
+	
+	local accent = Instance.new("Frame")
+	accent.Size = UDim2.new(0, 4, 1, 0)
+	accent.BackgroundColor3 = isError and CONFIG.COLORS.ERROR or CONFIG.COLORS.SUCCESS
+	accent.BorderSizePixel = 0
+	accent.Parent = notif
+	Util.createCorner(accent, 13)
+	
+	local icon = Instance.new("TextLabel")
+	icon.Size = UDim2.new(0, 40, 1, 0)
+	icon.Position = UDim2.new(0, 10, 0, 0)
+	icon.BackgroundTransparency = 1
+	icon.Text = isError and "⚠️" or "✅"
+	icon.TextSize = 26
+	icon.Font = Enum.Font.GothamBold
+	icon.Parent = notif
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -60, 1, -10)
+	label.Position = UDim2.new(0, 50, 0, 5)
+	label.BackgroundTransparency = 1
+	label.Text = text
+	label.TextColor3 = isError and CONFIG.COLORS.ERROR or CONFIG.COLORS.TEXT_PRIMARY
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 13
+	label.TextWrapped = true
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.Parent = notif
+	
+	local yOffset = 10
+	for _, child in ipairs(NotificationManager.container:GetChildren()) do
+		if child ~= notif and child:IsA("Frame") then
+			yOffset = yOffset + 75
+		end
+	end
+	
+	notif.Position = UDim2.new(1, 0, 0, yOffset)
+	Util.tween(notif, {Position = UDim2.new(0, 0, 0, yOffset)}, 0.4, Enum.EasingStyle.Back)
+	
+	Util.pulseEffect(icon, "TextSize", 26, 30, 0.3)
+	
+	task.delay(CONFIG.NOTIFICATION_DURATION, function()
+		if notif and notif.Parent then
+			Util.tween(notif, {Position = UDim2.new(1, 0, 0, yOffset), BackgroundTransparency = 1}, 0.3)
+			task.wait(0.35)
+			notif:Destroy()
+			
+			local index = 0
+			for _, child in ipairs(NotificationManager.container:GetChildren()) do
+				if child:IsA("Frame") then
+					Util.tween(child, {Position = UDim2.new(0, 0, 0, 10 + (index * 75))}, 0.25)
+					index = index + 1
+				end
+			end
+		end
+	end)
+end
+
+-- ============================================================================
+-- PLAYER SELECTION SYSTEM
+-- ============================================================================
+local PlayerSelector = {}
+PlayerSelector.playerCards = {}
+
+function PlayerSelector.deselectAll()
+	for _, data in pairs(PlayerSelector.playerCards) do
+		if data.card and data.card.Parent then
+			Util.tween(data.card, {BackgroundTransparency = 0.3}, 0.2)
+			Util.tween(data.card, {BackgroundColor3 = CONFIG.COLORS.PLAYER_CARD}, 0.2)
+			Util.tween(data.indicator, {BackgroundTransparency = 1}, 0.2)
+			Util.tween(data.checkmark, {BackgroundTransparency = 1}, 0.2)
+		end
+	end
+end
+
+function PlayerSelector.selectPlayer(player, card, indicator, checkmark, statusLabel)
+	PlayerSelector.deselectAll()
+	State.selectedPlayer = player
+	
+	Util.tween(card, {BackgroundTransparency = 0.15}, 0.2)
+	Util.tween(card, {BackgroundColor3 = Color3.fromRGB(240, 245, 255)}, 0.2)
+	Util.tween(indicator, {BackgroundTransparency = 0}, 0.3)
+	Util.tween(checkmark, {BackgroundTransparency = 0}, 0.3)
+	
+	Util.pulseEffect(checkmark, "TextSize", 16, 20, 0.2)
+	
+	if statusLabel then
+		statusLabel.Text = "Ready - Player selected: " .. player.DisplayName
+	end
+	
+	NotificationManager.show("Selected: " .. player.DisplayName, "success")
+end
+
+function PlayerSelector.createPlayerCard(player, parent, statusLabel)
+	local card = Instance.new("TextButton")
+	card.Size = UDim2.new(1, -8, 0, 56)
+	card.BackgroundColor3 = CONFIG.COLORS.PLAYER_CARD
+	card.BackgroundTransparency = 0.3
+	card.BorderSizePixel = 0
+	card.AutoButtonColor = false
+	card.Text = ""
+	card.Parent = parent
+	Util.createCorner(card, 10)
+	Util.createStroke(card, CONFIG.COLORS.BORDER, 1.5, 0.75)
+	
+	local avatar = Instance.new("ImageLabel")
+	avatar.Size = UDim2.new(0, 40, 0, 40)
+	avatar.Position = UDim2.new(0, 8, 0.5, -20)
+	avatar.BackgroundColor3 = Color3.fromRGB(230, 230, 240)
+	avatar.BorderSizePixel = 0
+	avatar.Image = Util.getPlayerThumbnail(player.UserId)
+	avatar.Parent = card
+	Util.createCorner(avatar, 20)
+	Util.createStroke(avatar, CONFIG.COLORS.BORDER, 1, 0.8)
+	
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, -120, 0, 20)
+	nameLabel.Position = UDim2.new(0, 56, 0, 10)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = player.DisplayName
+	nameLabel.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 14
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	nameLabel.Parent = card
+	
+	local idLabel = Instance.new("TextLabel")
+	idLabel.Size = UDim2.new(1, -120, 0, 16)
+	idLabel.Position = UDim2.new(0, 56, 0, 30)
+	idLabel.BackgroundTransparency = 1
+	idLabel.Text = "@" .. player.Name .. " • ID: " .. player.UserId
+	idLabel.TextColor3 = CONFIG.COLORS.TEXT_SECONDARY
+	idLabel.Font = Enum.Font.Gotham
+	idLabel.TextSize = 11
+	idLabel.TextXAlignment = Enum.TextXAlignment.Left
+	idLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	idLabel.Parent = card
+	
+	local indicator = Instance.new("Frame")
+	indicator.Size = UDim2.new(0, 4, 0.7, 0)
+	indicator.Position = UDim2.new(0, 0, 0.15, 0)
+	indicator.BackgroundColor3 = CONFIG.COLORS.SELECTED
+	indicator.BorderSizePixel = 0
+	indicator.BackgroundTransparency = 1
+	indicator.Parent = card
+	Util.createCorner(indicator, 2)
+	
+	local checkmark = Instance.new("TextLabel")
+	checkmark.Size = UDim2.new(0, 24, 0, 24)
+	checkmark.Position = UDim2.new(1, -32, 0.5, -12)
+	checkmark.BackgroundColor3 = CONFIG.COLORS.SELECTED
+	checkmark.BackgroundTransparency = 1
+	checkmark.Text = "✓"
+	checkmark.TextColor3 = Color3.fromRGB(255, 255, 255)
+	checkmark.Font = Enum.Font.GothamBold
+	checkmark.TextSize = 16
+	checkmark.Parent = card
+	Util.createCorner(checkmark, 12)
+	
+	card.MouseEnter:Connect(function()
+		if State.selectedPlayer ~= player then
+			Util.tween(card, {BackgroundTransparency = 0.2}, 0.2)
+		end
+	end)
+	
+	card.MouseLeave:Connect(function()
+		if State.selectedPlayer ~= player then
+			Util.tween(card, {BackgroundTransparency = 0.3}, 0.2)
+		end
+	end)
+	
+	card.MouseButton1Click:Connect(function()
+		PlayerSelector.selectPlayer(player, card, indicator, checkmark, statusLabel)
+	end)
+	
+	PlayerSelector.playerCards[player] = {
+		card = card,
+		indicator = indicator,
+		checkmark = checkmark
+	}
+	
+	return card
+end
+
+-- ============================================================================
+-- DRAGGABLE FUNCTIONALITY
+-- ============================================================================
+local function makeDraggable(frame)
+	local dragging, dragInput, dragStart, startPos
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+	
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
+			
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+	
+	frame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+-- ============================================================================
+-- MAIN GUI CONSTRUCTION
+-- ============================================================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TradeFreezeGuiPremium"
+screenGui.ResetOnSpawn = false
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = LP:WaitForChild("PlayerGui")
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, CONFIG.GUI_SIZE.X, 0, CONFIG.GUI_SIZE.Y)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = CONFIG.COLORS.BACKGROUND
+mainFrame.BackgroundTransparency = 0.25
+mainFrame.BorderSizePixel = 0
+mainFrame.ClipsDescendants = true
+mainFrame.Parent = screenGui
+Util.createCorner(mainFrame, 20)
+Util.createStroke(mainFrame, CONFIG.COLORS.BORDER, 2.5, 0.75)
+
+Util.createGradient(mainFrame, {
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 240, 255))
+}, 135, {
+	NumberSequenceKeypoint.new(0, 0.25),
+	NumberSequenceKeypoint.new(1, 0.35)
+})
+
+makeDraggable(mainFrame)
+
+-- Header
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1, 0, 0, 55)
+header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+header.BackgroundTransparency = 0.45
+header.BorderSizePixel = 0
+header.Parent = mainFrame
+Util.createCorner(header, 20)
+
+-- Mac Buttons
+local buttonContainer = Instance.new("Frame")
+buttonContainer.Size = UDim2.new(0, 70, 0, 20)
+buttonContainer.Position = UDim2.new(0, 15, 0.5, -10)
+buttonContainer.BackgroundTransparency = 1
+buttonContainer.Parent = header
+
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 26, 0, 26)
-closeButton.Position = UDim2.new(1, -36, 0, 10)
-closeButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-closeButton.Text = "x"
-closeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-closeButton.Font = Enum.Font.GothamBold
-closeButton.TextSize = 18
-closeButton.AnchorPoint = Vector2.new(0, 0)
-closeButton.Parent = frame
+closeButton.Size = UDim2.new(0, 16, 0, 16)
+closeButton.Position = UDim2.new(0, 0, 0, 2)
+closeButton.BackgroundColor3 = CONFIG.COLORS.MAC_RED
+closeButton.Text = ""
+closeButton.AutoButtonColor = false
+closeButton.Parent = buttonContainer
+Util.createCorner(closeButton, 8)
 
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(1, 0) -- Fully rounded (circle)
-closeCorner.Parent = closeButton
+local closeIcon = Instance.new("TextLabel")
+closeIcon.Size = UDim2.new(1, 0, 1, 0)
+closeIcon.BackgroundTransparency = 1
+closeIcon.Text = "❌"
+closeIcon.Font = Enum.Font.GothamBold
+closeIcon.TextSize = 11
+closeIcon.TextColor3 = Color3.fromRGB(60, 30, 30)
+closeIcon.TextTransparency = 1
+closeIcon.Parent = closeButton
 
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 16, 0, 16)
+minimizeButton.Position = UDim2.new(0, 24, 0, 2)
+minimizeButton.BackgroundColor3 = CONFIG.COLORS.MAC_YELLOW
+minimizeButton.Text = ""
+minimizeButton.AutoButtonColor = false
+minimizeButton.Parent = buttonContainer
+Util.createCorner(minimizeButton, 8)
+
+local minimizeIcon = Instance.new("TextLabel")
+minimizeIcon.Size = UDim2.new(1, 0, 1, 0)
+minimizeIcon.BackgroundTransparency = 1
+minimizeIcon.Text = "−"
+minimizeIcon.Font = Enum.Font.GothamBold
+minimizeIcon.TextSize = 14
+minimizeIcon.TextColor3 = Color3.fromRGB(60, 30, 30)
+minimizeIcon.TextTransparency = 1
+minimizeIcon.Parent = minimizeButton
+
+local greenBtn = Instance.new("TextButton")
+greenBtn.Size = UDim2.new(0, 16, 0, 16)
+greenBtn.Position = UDim2.new(0, 48, 0, 2)
+greenBtn.BackgroundColor3 = CONFIG.COLORS.MAC_GREEN
+greenBtn.Text = ""
+greenBtn.AutoButtonColor = false
+greenBtn.Parent = buttonContainer
+Util.createCorner(greenBtn, 8)
+
+buttonContainer.MouseEnter:Connect(function()
+	Util.tween(closeIcon, {TextTransparency = 0}, 0.2)
+	Util.tween(minimizeIcon, {TextTransparency = 0}, 0.2)
 end)
 
--- Title
+buttonContainer.MouseLeave:Connect(function()
+	Util.tween(closeIcon, {TextTransparency = 1}, 0.2)
+	Util.tween(minimizeIcon, {TextTransparency = 1}, 0.2)
+end)
+
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -60, 0, 26) -- leave space for close button
-title.Position = UDim2.new(0, 10, 0, 10)
+title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "Jarad Script"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Text = "🔒 TRADE FREEZE PRO"
+title.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
 title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = frame
+title.TextSize = 19
+title.Parent = header
 
--- Subtitle
-local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, -20, 0, 16)
-subtitle.Position = UDim2.new(0, 10, 0, 36)
-subtitle.BackgroundTransparency = 1
-subtitle.Text = "Trade Freeze"
-subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
-subtitle.Font = Enum.Font.Gotham
-subtitle.TextSize = 11
-subtitle.TextXAlignment = Enum.TextXAlignment.Left
-subtitle.Parent = frame
+-- Content
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1, -28, 1, -70)
+content.Position = UDim2.new(0, 14, 0, 63)
+content.BackgroundTransparency = 1
+content.Parent = mainFrame
 
--- Status Text
-local status = Instance.new("TextLabel")
-status.Size = UDim2.new(1, -20, 0, 30) -- increased height to avoid overlap
-status.Position = UDim2.new(0, 10, 0, 54)
-status.BackgroundTransparency = 1
-status.Text = "Trade Status: Added All Pets With Priority"
-status.TextColor3 = Color3.fromRGB(220, 220, 220)
-status.Font = Enum.Font.Gotham
-status.TextSize = 11
-status.TextXAlignment = Enum.TextXAlignment.Left
-status.TextWrapped = true
-status.Parent = frame
+-- Player List Card
+local playerListCard = Instance.new("Frame")
+playerListCard.Size = UDim2.new(1, 0, 0, 140)
+playerListCard.Position = UDim2.new(0, 0, 0, 0)
+playerListCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+playerListCard.BackgroundTransparency = 0.35
+playerListCard.BorderSizePixel = 0
+playerListCard.Parent = content
+Util.createCorner(playerListCard, 14)
+Util.createStroke(playerListCard, CONFIG.COLORS.BORDER, 1.5, 0.7)
 
--- Toggle Label
+local listTitle = Instance.new("TextLabel")
+listTitle.Size = UDim2.new(1, -20, 0, 22)
+listTitle.Position = UDim2.new(0, 10, 0, 8)
+listTitle.BackgroundTransparency = 1
+listTitle.Text = "👥 Select Target Player"
+listTitle.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
+listTitle.Font = Enum.Font.GothamBold
+listTitle.TextSize = 13
+listTitle.TextXAlignment = Enum.TextXAlignment.Left
+listTitle.Parent = playerListCard
+
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -16, 1, -38)
+scrollFrame.Position = UDim2.new(0, 8, 0, 34)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 4
+scrollFrame.ScrollBarImageColor3 = CONFIG.COLORS.PRIMARY
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.Parent = playerListCard
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.Name
+listLayout.Padding = UDim.new(0, 6)
+listLayout.Parent = scrollFrame
+
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 4)
+end)
+
+-- Status Card
+local statusCard = Instance.new("Frame")
+statusCard.Size = UDim2.new(1, 0, 0, 65)
+statusCard.Position = UDim2.new(0, 0, 0, 148)
+statusCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+statusCard.BackgroundTransparency = 0.35
+statusCard.BorderSizePixel = 0
+statusCard.Parent = content
+Util.createCorner(statusCard, 14)
+Util.createStroke(statusCard, CONFIG.COLORS.BORDER, 1.5, 0.7)
+
+local statusTitle = Instance.new("TextLabel")
+statusTitle.Size = UDim2.new(1, -20, 0, 20)
+statusTitle.Position = UDim2.new(0, 10, 0, 8)
+statusTitle.BackgroundTransparency = 1
+statusTitle.Text = "📊 Trade Status"
+statusTitle.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
+statusTitle.Font = Enum.Font.GothamBold
+statusTitle.TextSize = 13
+statusTitle.TextXAlignment = Enum.TextXAlignment.Left
+statusTitle.Parent = statusCard
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, -20, 0, 32)
+statusLabel.Position = UDim2.new(0, 10, 0, 30)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Select a player to begin"
+statusLabel.TextColor3 = CONFIG.COLORS.TEXT_SECONDARY
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 12
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.TextWrapped = true
+statusLabel.TextYAlignment = Enum.TextYAlignment.Top
+statusLabel.Parent = statusCard
+
+-- Toggle Card
+local toggleCard = Instance.new("Frame")
+toggleCard.Size = UDim2.new(1, 0, 0, 52)
+toggleCard.Position = UDim2.new(0, 0, 0, 221)
+toggleCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+toggleCard.BackgroundTransparency = 0.35
+toggleCard.BorderSizePixel = 0
+toggleCard.Parent = content
+Util.createCorner(toggleCard, 14)
+Util.createStroke(toggleCard, CONFIG.COLORS.BORDER, 1.5, 0.7)
+
 local toggleLabel = Instance.new("TextLabel")
-toggleLabel.Size = UDim2.new(0.6, 0, 0, 26)
-toggleLabel.Position = UDim2.new(0, 10, 0, 85)
+toggleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+toggleLabel.Position = UDim2.new(0, 14, 0, 0)
 toggleLabel.BackgroundTransparency = 1
-toggleLabel.Text = "Enable Trade Freeze (OFF)"
-toggleLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-toggleLabel.Font = Enum.Font.Gotham
-toggleLabel.TextSize = 13
+toggleLabel.Text = "🛡️ Trade Freeze"
+toggleLabel.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
+toggleLabel.Font = Enum.Font.GothamBold
+toggleLabel.TextSize = 15
 toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
-toggleLabel.Parent = frame
+toggleLabel.Parent = toggleCard
 
--- Toggle Button
+local toggleStatus = Instance.new("TextLabel")
+toggleStatus.Size = UDim2.new(0.3, 0, 0, 15)
+toggleStatus.Position = UDim2.new(0, 14, 1, -22)
+toggleStatus.BackgroundTransparency = 1
+toggleStatus.Text = "OFF"
+toggleStatus.TextColor3 = CONFIG.COLORS.TOGGLE_OFF
+toggleStatus.Font = Enum.Font.Gotham
+toggleStatus.TextSize = 11
+toggleStatus.TextXAlignment = Enum.TextXAlignment.Left
+toggleStatus.Parent = toggleCard
+
 local toggle = Instance.new("TextButton")
-toggle.Size = UDim2.new(0, 42, 0, 23)
-toggle.Position = UDim2.new(0.65, 0, 0, 85)
-toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+toggle.Size = UDim2.new(0, 52, 0, 28)
+toggle.Position = UDim2.new(1, -64, 0.5, -14)
+toggle.BackgroundColor3 = CONFIG.COLORS.TOGGLE_OFF
+toggle.BackgroundTransparency = 0.25
 toggle.Text = ""
 toggle.AutoButtonColor = false
-toggle.Parent = frame
-toggle.ClipsDescendants = true
+toggle.Parent = toggleCard
+Util.createCorner(toggle, 14)
+Util.createStroke(toggle, CONFIG.COLORS.BORDER, 1.5, 0.7)
 
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(1, 0)
-toggleCorner.Parent = toggle
-
--- Toggle Circle
 local toggleCircle = Instance.new("Frame")
-toggleCircle.Size = UDim2.new(0, 19, 0, 19)
+toggleCircle.Size = UDim2.new(0, 24, 0, 24)
 toggleCircle.Position = UDim2.new(0, 2, 0, 2)
 toggleCircle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 toggleCircle.Parent = toggle
-local circleCorner = Instance.new("UICorner")
-circleCorner.CornerRadius = UDim.new(1, 0)
-circleCorner.Parent = toggleCircle
-
--- Notification function
-local function notify(text)
-    local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    local notifGui = playerGui:FindFirstChild("NotificationGui")
-    if not notifGui then
-        notifGui = Instance.new("ScreenGui")
-        notifGui.Name = "NotificationGui"
-        notifGui.Parent = playerGui
-        notifGui.ResetOnSpawn = false
-    end
-
-    local notificationFrame = Instance.new("Frame")
-    notificationFrame.Size = UDim2.new(0, 260, 0, 30)  -- smaller width and height
-    notificationFrame.AnchorPoint = Vector2.new(1, 1)
-    notificationFrame.Position = UDim2.new(1, -10, 1, -50)
-    notificationFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    notificationFrame.BorderSizePixel = 0
-    notificationFrame.ClipsDescendants = true
-    notificationFrame.Parent = notifGui
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = notificationFrame
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -20, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "✅ " .. text
-    label.TextColor3 = Color3.fromRGB(240, 240, 240)
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 14
-    label.TextWrapped = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = notificationFrame
-
-    -- Tween in
-    notificationFrame.Position = UDim2.new(1, 310, 1, -50)
-    local tweenIn = TweenService:Create(notificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -10, 1, -50)})
-    tweenIn:Play()
-
-    -- Tween out and destroy after delay
-    delay(2.5, function()
-        local tweenOut = TweenService:Create(notificationFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(1, 310, 1, -50)})
-        tweenOut:Play()
-        tweenOut.Completed:Wait()
-        notificationFrame:Destroy()
-    end)
-end
-
--- Toggle Logic
-local isOn = false
-
-local function updateToggle()
-    if isOn then
-        toggle.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-        toggleLabel.Text = "Enable Trade Freeze (ON)"
-        status.Text = "Trade Status: Trade Freezed — Take out your pets and click Offer Pets!"
-        toggleCircle:TweenPosition(UDim2.new(0.52, 0, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-    else
-        toggle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-        toggleLabel.Text = "Enable Trade Freeze (OFF)"
-        status.Text = "Trade Status: Added All Pets With Priority"
-        toggleCircle:TweenPosition(UDim2.new(0, 2, 0, 2), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
-    end
-end
-
-toggle.MouseButton1Click:Connect(function()
-    isOn = not isOn
-    updateToggle()
-    print("Trade Freeze toggled:", isOn)
-end)
-
-updateToggle()
+Util.createCorner(toggleCircle, 12)
+Util.createStroke(toggleCircle, Color3.fromRGB(220, 220, 230), 1, 0.5)
 
 -- Offer Pets Button
 local offerButton = Instance.new("TextButton")
-offerButton.Size = UDim2.new(1, -20, 0, 40)
-offerButton.Position = UDim2.new(0, 10, 0, 120)
-offerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+offerButton.Size = UDim2.new(1, 0, 0, 44)
+offerButton.Position = UDim2.new(0, 0, 0, 281)
+offerButton.BackgroundColor3 = CONFIG.COLORS.PRIMARY
+offerButton.BackgroundTransparency = 0.15
 offerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 offerButton.Font = Enum.Font.GothamBold
-offerButton.TextSize = 16
-offerButton.Text = "Offer Pets (Priority)"
-offerButton.Parent = frame
+offerButton.TextSize = 15
+offerButton.Text = "🐾 Offer Pets (Priority)"
 offerButton.AutoButtonColor = false
-local offerCorner = Instance.new("UICorner")
-offerCorner.CornerRadius = UDim.new(0, 6)
-offerCorner.Parent = offerButton
+offerButton.Parent = content
+Util.createCorner(offerButton, 13)
+Util.createStroke(offerButton, CONFIG.COLORS.BORDER, 1.5, 0.7)
 
 offerButton.MouseEnter:Connect(function()
-    offerButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+	Util.tween(offerButton, {BackgroundTransparency = 0}, 0.2)
+	Util.tween(offerButton, {Size = UDim2.new(1, 4, 0, 46)}, 0.2)
 end)
 
 offerButton.MouseLeave:Connect(function()
-    offerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+	Util.tween(offerButton, {BackgroundTransparency = 0.15}, 0.2)
+	Util.tween(offerButton, {Size = UDim2.new(1, 0, 0, 44)}, 0.2)
 end)
 
-offerButton.MouseButton1Click:Connect(function()
-    if not isOn then
-        notify("You must turn on Trade Freeze")
-        return
-    end
-    status.Text = "Trade Status: Added All Pets With Priority"
-    notify("Added All Pets With Priority")
-    print("Offer Pets button clicked and processed")
-    -- Insert your offer pets logic here
-end)
-
--- Force Accept Button
+-- Accept Button
 local acceptButton = Instance.new("TextButton")
-acceptButton.Size = UDim2.new(1, -20, 0, 40)
-acceptButton.Position = UDim2.new(0, 10, 0, 170)
-acceptButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+acceptButton.Size = UDim2.new(1, 0, 0, 44)
+acceptButton.Position = UDim2.new(0, 0, 0, 333)
+acceptButton.BackgroundColor3 = CONFIG.COLORS.SUCCESS
+acceptButton.BackgroundTransparency = 0.15
 acceptButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 acceptButton.Font = Enum.Font.GothamBold
-acceptButton.TextSize = 16
-acceptButton.Text = "Force Accept"
-acceptButton.Parent = frame
+acceptButton.TextSize = 15
+acceptButton.Text = "✓ Force Accept Trade"
 acceptButton.AutoButtonColor = false
-local acceptCorner = Instance.new("UICorner")
-acceptCorner.CornerRadius = UDim.new(0, 6)
-acceptCorner.Parent = acceptButton
+acceptButton.Parent = content
+Util.createCorner(acceptButton, 13)
+Util.createStroke(acceptButton, CONFIG.COLORS.BORDER, 1.5, 0.7)
 
 acceptButton.MouseEnter:Connect(function()
-    acceptButton.BackgroundColor3 = Color3.fromRGB(0, 160, 0)
+	Util.tween(acceptButton, {BackgroundTransparency = 0}, 0.2)
+	Util.tween(acceptButton, {Size = UDim2.new(1, 4, 0, 46)}, 0.2)
 end)
 
 acceptButton.MouseLeave:Connect(function()
-    acceptButton.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+	Util.tween(acceptButton, {BackgroundTransparency = 0.15}, 0.2)
+	Util.tween(acceptButton, {Size = UDim2.new(1, 0, 0, 44)}, 0.2)
 end)
 
-acceptButton.MouseButton1Click:Connect(function()
-    if not isOn then
-        notify("You must turn on Trade Freeze")
-        return
-    end
-    print("Force Accept button clicked and processed")
-    notify("Force Accept executed")
-    -- Insert your force accept logic here
+-- ============================================================================
+-- INITIALIZE NOTIFICATION SYSTEM
+-- ============================================================================
+NotificationManager.init(screenGui)
+
+-- ============================================================================
+-- POPULATE PLAYER LIST
+-- ============================================================================
+for _, player in ipairs(Players:GetPlayers()) do
+	if player ~= LP then
+		PlayerSelector.createPlayerCard(player, scrollFrame, statusLabel)
+	end
+end
+
+Players.PlayerAdded:Connect(function(player)
+	if player ~= LP then
+		task.wait(0.1)
+		PlayerSelector.createPlayerCard(player, scrollFrame, statusLabel)
+	end
 end)
+
+Players.PlayerRemoving:Connect(function(player)
+	if PlayerSelector.playerCards[player] then
+		if PlayerSelector.playerCards[player].card then
+			PlayerSelector.playerCards[player].card:Destroy()
+		end
+		PlayerSelector.playerCards[player] = nil
+		if State.selectedPlayer == player then
+			State.selectedPlayer = nil
+			statusLabel.Text = "Player left - Select another player"
+			if State.isOn then
+				State.isOn = false
+				toggle.BackgroundColor3 = CONFIG.COLORS.TOGGLE_OFF
+				toggle.BackgroundTransparency = 0.25
+				toggleStatus.Text = "OFF"
+				toggleStatus.TextColor3 = CONFIG.COLORS.TOGGLE_OFF
+				Util.tween(toggleCircle, {Position = UDim2.new(0, 2, 0, 2)}, 0.3, Enum.EasingStyle.Back)
+			end
+		end
+	end
+end)
+
+-- ============================================================================
+-- TOGGLE FUNCTIONALITY
+-- ============================================================================
+local function updateToggle()
+	if State.isOn then
+		toggle.BackgroundColor3 = CONFIG.COLORS.SUCCESS
+		toggle.BackgroundTransparency = 0.15
+		toggleStatus.Text = "ON"
+		toggleStatus.TextColor3 = CONFIG.COLORS.SUCCESS
+		statusLabel.Text = "🔒 Trade Frozen — Ready to trade!"
+		Util.tween(toggleCircle, {Position = UDim2.new(1, -26, 0, 2)}, 0.3, Enum.EasingStyle.Back)
+	else
+		toggle.BackgroundColor3 = CONFIG.COLORS.TOGGLE_OFF
+		toggle.BackgroundTransparency = 0.25
+		toggleStatus.Text = "OFF"
+		toggleStatus.TextColor3 = CONFIG.COLORS.TOGGLE_OFF
+		State.petsOffered = false
+		if State.selectedPlayer then
+			statusLabel.Text = "Ready - Player selected: " .. State.selectedPlayer.DisplayName
+		else
+			statusLabel.Text = "Select a player to begin"
+		end
+		Util.tween(toggleCircle, {Position = UDim2.new(0, 2, 0, 2)}, 0.3, Enum.EasingStyle.Back)
+	end
+end
+
+toggle.MouseButton1Click:Connect(function()
+	if not State.selectedPlayer then
+		NotificationManager.show("Select a player first!", "error")
+		Util.pulseEffect(toggle, "BackgroundColor3", CONFIG.COLORS.TOGGLE_OFF, CONFIG.COLORS.ERROR, 0.2)
+		task.wait(0.4)
+		toggle.BackgroundColor3 = CONFIG.COLORS.TOGGLE_OFF
+		return
+	end
+	
+	State.isOn = not State.isOn
+	updateToggle()
+	NotificationManager.show(
+		State.isOn and "Trade Freeze Enabled for " .. State.selectedPlayer.DisplayName or "Trade Freeze Disabled", 
+		State.isOn and "success" or "info"
+	)
+	Util.pulseEffect(toggle, "BackgroundTransparency", State.isOn and 0.15 or 0.25, 0, 0.15)
+	print("[Trade Freeze]", State.isOn and "Enabled" or "Disabled", "for", State.selectedPlayer and State.selectedPlayer.Name or "None")
+end)
+
+-- ============================================================================
+-- OFFER PETS BUTTON FUNCTIONALITY
+-- ============================================================================
+offerButton.MouseButton1Click:Connect(function()
+	if not State.selectedPlayer then
+		NotificationManager.show("Select a player first!", "error")
+		Util.pulseEffect(offerButton, "BackgroundColor3", CONFIG.COLORS.PRIMARY, CONFIG.COLORS.ERROR, 0.2)
+		task.wait(0.4)
+		offerButton.BackgroundColor3 = CONFIG.COLORS.PRIMARY
+		return
+	end
+	
+	if not State.isOn then
+		NotificationManager.show("Enable Trade Freeze first!", "error")
+		Util.pulseEffect(offerButton, "BackgroundColor3", CONFIG.COLORS.PRIMARY, CONFIG.COLORS.ERROR, 0.2)
+		task.wait(0.4)
+		offerButton.BackgroundColor3 = CONFIG.COLORS.PRIMARY
+		return
+	end
+	
+	State.petsOffered = true
+	statusLabel.Text = "✅ All Pets Added With Priority"
+	NotificationManager.show("All Pets Offered to " .. State.selectedPlayer.DisplayName, "success")
+	print("[Trade Freeze] Offering pets to:", State.selectedPlayer.Name, "(" .. State.selectedPlayer.UserId .. ")")
+	-- Insert your offer pets logic here
+end)
+
+-- ============================================================================
+-- FORCE ACCEPT BUTTON FUNCTIONALITY
+-- ============================================================================
+acceptButton.MouseButton1Click:Connect(function()
+	if not State.selectedPlayer then
+		NotificationManager.show("Select a player first!", "error")
+		Util.pulseEffect(acceptButton, "BackgroundColor3", CONFIG.COLORS.SUCCESS, CONFIG.COLORS.ERROR, 0.2)
+		task.wait(0.4)
+		acceptButton.BackgroundColor3 = CONFIG.COLORS.SUCCESS
+		return
+	end
+	
+	if not State.isOn then
+		NotificationManager.show("Enable Trade Freeze first!", "error")
+		Util.pulseEffect(acceptButton, "BackgroundColor3", CONFIG.COLORS.SUCCESS, CONFIG.COLORS.ERROR, 0.2)
+		task.wait(0.4)
+		acceptButton.BackgroundColor3 = CONFIG.COLORS.SUCCESS
+		return
+	end
+	
+	if not State.petsOffered then
+		NotificationManager.show("You must offer pets first!", "error")
+		Util.pulseEffect(acceptButton, "BackgroundColor3", CONFIG.COLORS.SUCCESS, CONFIG.COLORS.ERROR, 0.2)
+		Util.pulseEffect(offerButton, "BackgroundColor3", CONFIG.COLORS.PRIMARY, Color3.fromRGB(255, 200, 100), 0.3)
+		task.wait(0.4)
+		acceptButton.BackgroundColor3 = CONFIG.COLORS.SUCCESS
+		return
+	end
+	
+	-- Disable button during loading
+	acceptButton.Active = false
+	local originalText = acceptButton.Text
+	
+	-- Create loading overlay
+	local loadingOverlay = Instance.new("Frame")
+	loadingOverlay.Size = UDim2.new(1, 0, 1, 0)
+	loadingOverlay.Position = UDim2.new(0, 0, 0, 0)
+	loadingOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	loadingOverlay.BackgroundTransparency = 1
+	loadingOverlay.BorderSizePixel = 0
+	loadingOverlay.ZIndex = 100
+	loadingOverlay.Parent = mainFrame
+	Util.createCorner(loadingOverlay, 20)
+	
+	local loadingCard = Instance.new("Frame")
+	loadingCard.Size = UDim2.new(0, 0, 0, 0)
+	loadingCard.Position = UDim2.new(0.5, 0, 0.5, 0)
+	loadingCard.AnchorPoint = Vector2.new(0.5, 0.5)
+	loadingCard.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	loadingCard.BackgroundTransparency = 0.2
+	loadingCard.BorderSizePixel = 0
+	loadingCard.ZIndex = 101
+	loadingCard.Parent = loadingOverlay
+	Util.createCorner(loadingCard, 16)
+	Util.createStroke(loadingCard, CONFIG.COLORS.BORDER, 2, 0.6)
+	
+	-- Loading spinner container
+	local spinnerContainer = Instance.new("Frame")
+	spinnerContainer.Size = UDim2.new(0, 60, 0, 60)
+	spinnerContainer.Position = UDim2.new(0.5, -30, 0, 20)
+	spinnerContainer.BackgroundTransparency = 1
+	spinnerContainer.Parent = loadingCard
+	
+	-- Create spinner segments
+	local segments = 8
+	for i = 1, segments do
+		local segment = Instance.new("Frame")
+		segment.Size = UDim2.new(0, 6, 0, 16)
+		segment.Position = UDim2.new(0.5, -3, 0.5, -8)
+		segment.AnchorPoint = Vector2.new(0.5, 0.5)
+		segment.BackgroundColor3 = CONFIG.COLORS.PRIMARY
+		segment.BorderSizePixel = 0
+		segment.BackgroundTransparency = 1 - (i / segments) * 0.8
+		segment.Parent = spinnerContainer
+		Util.createCorner(segment, 3)
+		
+		-- Rotate each segment
+		local angle = (i - 1) * (360 / segments)
+		segment.Rotation = angle
+		segment.Position = UDim2.new(
+			0.5 + math.cos(math.rad(angle)) * 0.35,
+			0,
+			0.5 + math.sin(math.rad(angle)) * 0.35,
+			0
+		)
+	end
+	
+	-- Animate spinner rotation
+	local spinnerRotation = 0
+	local spinConnection
+	local RunService = game:GetService("RunService")
+	spinConnection = RunService.Heartbeat:Connect(function(dt)
+		spinnerRotation = spinnerRotation + dt * 180
+		spinnerContainer.Rotation = spinnerRotation
+	end)
+	
+	local loadingText = Instance.new("TextLabel")
+	loadingText.Size = UDim2.new(1, -20, 0, 30)
+	loadingText.Position = UDim2.new(0, 10, 1, -40)
+	loadingText.BackgroundTransparency = 1
+	loadingText.Text = "Processing Trade..."
+	loadingText.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
+	loadingText.Font = Enum.Font.GothamBold
+	loadingText.TextSize = 14
+	loadingText.Parent = loadingCard
+	
+	-- Animate loading dots
+	task.spawn(function()
+		local dots = 0
+		while loadingOverlay.Parent do
+			dots = (dots % 3) + 1
+			loadingText.Text = "Processing Trade" .. string.rep(".", dots)
+			task.wait(0.5)
+		end
+	end)
+	
+	-- Fade in animation
+	loadingOverlay.BackgroundTransparency = 1
+	loadingCard.Size = UDim2.new(0, 0, 0, 0)
+	Util.tween(loadingOverlay, {BackgroundTransparency = 0.5}, 0.3)
+	Util.tween(loadingCard, {Size = UDim2.new(0, 200, 0, 120)}, 0.4, Enum.EasingStyle.Back)
+	
+	-- Simulate processing time (2-4 seconds)
+	task.wait(math.random(20, 40) / 10)
+	
+	-- Stop spinner
+	if spinConnection then
+		spinConnection:Disconnect()
+	end
+	
+	-- Update loading text to error
+	loadingText.Text = "Error Occurred"
+	loadingText.TextColor3 = CONFIG.COLORS.ERROR
+	
+	-- Create error icon
+	local errorIcon = Instance.new("TextLabel")
+	errorIcon.Size = UDim2.new(0, 60, 0, 60)
+	errorIcon.Position = UDim2.new(0.5, -30, 0, 20)
+	errorIcon.BackgroundTransparency = 1
+	errorIcon.Text = "❌"
+	errorIcon.TextSize = 40
+	errorIcon.Parent = loadingCard
+	errorIcon.TextTransparency = 1
+	
+	-- Hide spinner, show error
+	Util.tween(spinnerContainer, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
+	task.wait(0.2)
+	Util.tween(errorIcon, {TextTransparency = 0}, 0.3)
+	Util.pulseEffect(errorIcon, "TextSize", 40, 48, 0.3)
+	
+	task.wait(1)
+	
+	-- Fade out and remove loading
+	Util.tween(loadingCard, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, Enum.EasingStyle.Back)
+	Util.tween(loadingOverlay, {BackgroundTransparency = 1}, 0.3)
+	task.wait(0.3)
+	loadingOverlay:Destroy()
+	
+	-- Re-enable button
+	acceptButton.Active = true
+	acceptButton.Text = originalText
+	
+	-- Show error notification
+	NotificationManager.show("Something went wrong, please try again", "error")
+	statusLabel.Text = "⚠️ Trade failed - Try again"
+	
+	print("[Trade Freeze] Trade attempt failed for:", State.selectedPlayer.Name)
+end)
+
+-- ============================================================================
+-- MAC BUTTON FUNCTIONALITY
+-- ============================================================================
+closeButton.MouseEnter:Connect(function()
+	Util.tween(closeButton, {BackgroundColor3 = Color3.fromRGB(255, 60, 50)}, 0.2)
+	Util.tween(closeIcon, {TextTransparency = 0}, 0.2)
+end)
+
+closeButton.MouseLeave:Connect(function()
+	Util.tween(closeButton, {BackgroundColor3 = CONFIG.COLORS.MAC_RED}, 0.2)
+	Util.tween(closeIcon, {TextTransparency = 1}, 0.2)
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+	Util.tween(mainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, Enum.EasingStyle.Back)
+	task.wait(0.3)
+	screenGui:Destroy()
+	print("[Trade Freeze] GUI Closed")
+end)
+
+minimizeButton.MouseEnter:Connect(function()
+	Util.tween(minimizeButton, {BackgroundColor3 = Color3.fromRGB(255, 170, 30)}, 0.2)
+	Util.tween(minimizeIcon, {TextTransparency = 0}, 0.2)
+end)
+
+minimizeButton.MouseLeave:Connect(function()
+	Util.tween(minimizeButton, {BackgroundColor3 = CONFIG.COLORS.MAC_YELLOW}, 0.2)
+	Util.tween(minimizeIcon, {TextTransparency = 1}, 0.2)
+end)
+
+minimizeButton.MouseButton1Click:Connect(function()
+	State.isMinimized = not State.isMinimized
+	if State.isMinimized then
+		Util.tween(mainFrame, {Size = UDim2.new(0, CONFIG.GUI_SIZE.X, 0, 55)}, 0.3)
+		minimizeIcon.Text = "+"
+	else
+		Util.tween(mainFrame, {Size = UDim2.new(0, CONFIG.GUI_SIZE.X, 0, CONFIG.GUI_SIZE.Y)}, 0.3)
+		minimizeIcon.Text = "−"
+	end
+end)
+
+-- ============================================================================
+-- INTRO ANIMATION
+-- ============================================================================
+mainFrame.Size = UDim2.new(0, 0, 0, 0)
+task.wait(0.15)
+Util.tween(mainFrame, {Size = UDim2.new(0, CONFIG.GUI_SIZE.X, 0, CONFIG.GUI_SIZE.Y)}, 0.65, Enum.EasingStyle.Back)
+
+updateToggle()
+print("✅ Trade Freeze GUI Premium Edition Loaded!")
+print("[Trade Freeze] Ready for player selection")
+print("[Trade Freeze] Players in game:", #Players:GetPlayers() - 1)
