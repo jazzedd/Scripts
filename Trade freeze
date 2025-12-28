@@ -412,7 +412,7 @@ Util.createCorner(closeButton, 8)
 local closeIcon = Instance.new("TextLabel")
 closeIcon.Size = UDim2.new(1, 0, 1, 0)
 closeIcon.BackgroundTransparency = 1
-closeIcon.Text = "❌"
+closeIcon.Text = "✕"
 closeIcon.Font = Enum.Font.GothamBold
 closeIcon.TextSize = 11
 closeIcon.TextColor3 = Color3.fromRGB(60, 30, 30)
