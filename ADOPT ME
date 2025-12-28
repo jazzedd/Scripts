@@ -1,298 +1,1095 @@
--- Adopt Me GUI 🐣✨
--- Step popup + Animated 6s Processing GUI
--- by @WhosJaraddd
+-- Adopt Me GUI 🐾 Glossy Edition
+-- Soft, eye-friendly glassmorphism design
+-- by @WhosJaraddd (Revised)
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 local LP = Players.LocalPlayer
+
+-- Utility Functions
+local function createCorner(parent, radius)
+	local corner = Instance.new("UICorner", parent)
+	corner.CornerRadius = UDim.new(0, radius or 12)
+	return corner
+end
+
+local function createStroke(parent, color, thickness)
+	local stroke = Instance.new("UIStroke", parent)
+	stroke.Color = color or Color3.fromRGB(255, 255, 255)
+	stroke.Thickness = thickness or 1
+	stroke.Transparency = 0.8
+	return stroke
+end
+
+local function smoothTween(obj, props, duration, style)
+	return TweenService:Create(obj, TweenInfo.new(duration or 0.3, style or Enum.EasingStyle.Quad), props)
+end
 
 -- Screen GUI
 local gui = Instance.new("ScreenGui", LP:WaitForChild("PlayerGui"))
-gui.Name = "AdoptMe"
+gui.Name = "AdoptMeGUI"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Main Frame
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 360, 0, 420)
-main.Position = UDim2.new(0.5, -180, 0.5, -210)
-main.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-main.BorderSizePixel = 0
-main.Active = true
-main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
-
--- Title
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
-title.Font = Enum.Font.GothamBold
-title.Text = "Adopt Me 🐾"
-title.TextColor3 = Color3.fromRGB(255,255,255)
-title.TextSize = 19
-Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
-
-local close = Instance.new("TextButton", title)
-close.Size = UDim2.new(0, 40, 0, 40)
-close.Position = UDim2.new(1, -45, 0, 0)
-close.BackgroundTransparency = 1
-close.Text = "×"
-close.Font = Enum.Font.GothamBold
-close.TextSize = 24
-close.TextColor3 = Color3.fromRGB(255, 70, 70)
-
--- Container
-local container = Instance.new("Frame", main)
-container.Size = UDim2.new(1, -20, 1, -60)
-container.Position = UDim2.new(0, 10, 0, 50)
-container.BackgroundTransparency = 1
-
-local UIList = Instance.new("UIListLayout", container)
-UIList.Padding = UDim.new(0, 10)
-UIList.FillDirection = Enum.FillDirection.Vertical
-UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-UIList.VerticalAlignment = Enum.VerticalAlignment.Top
-
--- Blur
+-- Blur Effect
 local blurEffect = Instance.new("BlurEffect", Lighting)
 blurEffect.Size = 0
 
--- Step Frame
+-- Shadow/Overlay
+local overlay = Instance.new("Frame", gui)
+overlay.Size = UDim2.new(1, 0, 1, 0)
+overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+overlay.BackgroundTransparency = 1
+overlay.ZIndex = 1
+overlay.Visible = false
+
+-- Main Frame (Glassmorphism)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 420, 0, 520)
+main.Position = UDim2.new(0.5, -210, 0.5, -260)
+main.BackgroundColor3 = Color3.fromRGB(245, 245, 255)
+main.BackgroundTransparency = 0.3
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.ClipsDescendants = true
+main.ZIndex = 2
+createCorner(main, 20)
+createStroke(main, Color3.fromRGB(255, 255, 255), 2)
+
+-- Subtle gradient
+local gradient = Instance.new("UIGradient", main)
+gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(240, 240, 255))
+}
+gradient.Rotation = 135
+gradient.Transparency = NumberSequence.new{
+	NumberSequenceKeypoint.new(0, 0.3),
+	NumberSequenceKeypoint.new(1, 0.4)
+}
+
+-- Header
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 65)
+header.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+header.BackgroundTransparency = 0.5
+header.BorderSizePixel = 0
+createCorner(header, 20)
+
+local headerStroke = createStroke(header, Color3.fromRGB(255, 255, 255), 1.5)
+headerStroke.Transparency = 0.7
+
+-- macOS Style Window Buttons
+local buttonContainer = Instance.new("Frame", header)
+buttonContainer.Size = UDim2.new(0, 70, 0, 20)
+buttonContainer.Position = UDim2.new(0, 15, 0.5, -10)
+buttonContainer.BackgroundTransparency = 1
+
+-- Close Button (Red)
+local close = Instance.new("TextButton", buttonContainer)
+close.Size = UDim2.new(0, 15, 0, 15)
+close.Position = UDim2.new(0, 0, 0, 2.5)
+close.BackgroundColor3 = Color3.fromRGB(255, 95, 86)
+close.Text = ""
+close.AutoButtonColor = false
+createCorner(close, 8)
+
+local closeIcon = Instance.new("TextLabel", close)
+closeIcon.Size = UDim2.new(1, 0, 1, 0)
+closeIcon.BackgroundTransparency = 1
+closeIcon.Text = "❌"
+closeIcon.Font = Enum.Font.GothamBold
+closeIcon.TextSize = 10
+closeIcon.TextColor3 = Color3.fromRGB(130, 40, 40)
+closeIcon.TextTransparency = 1
+
+-- Minimize Button (Yellow)
+local minimize = Instance.new("TextButton", buttonContainer)
+minimize.Size = UDim2.new(0, 15, 0, 15)
+minimize.Position = UDim2.new(0, 24, 0, 2.5)
+minimize.BackgroundColor3 = Color3.fromRGB(255, 189, 46)
+minimize.Text = ""
+minimize.AutoButtonColor = false
+createCorner(minimize, 8)
+
+local minimizeIcon = Instance.new("TextLabel", minimize)
+minimizeIcon.Size = UDim2.new(1, 0, 1, 0)
+minimizeIcon.BackgroundTransparency = 1
+minimizeIcon.Text = "−"
+minimizeIcon.Font = Enum.Font.GothamBold
+minimizeIcon.TextSize = 13
+minimizeIcon.TextColor3 = Color3.fromRGB(130, 90, 30)
+minimizeIcon.TextTransparency = 1
+
+-- Green Button (Settings)
+local settings = Instance.new("TextButton", buttonContainer)
+settings.Size = UDim2.new(0, 15, 0, 15)
+settings.Position = UDim2.new(0, 48, 0, 2.5)
+settings.BackgroundColor3 = Color3.fromRGB(40, 201, 64)
+settings.Text = ""
+settings.AutoButtonColor = false
+createCorner(settings, 8)
+
+local settingsIcon = Instance.new("TextLabel", settings)
+settingsIcon.Size = UDim2.new(1, 0, 1, 0)
+settingsIcon.BackgroundTransparency = 1
+settingsIcon.Text = "⚙"
+settingsIcon.Font = Enum.Font.GothamBold
+settingsIcon.TextSize = 10
+settingsIcon.TextColor3 = Color3.fromRGB(30, 100, 40)
+settingsIcon.TextTransparency = 1
+
+-- Title with Icon
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1, 0, 1, 0)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.Text = "🐾 ADOPT ME PRO"
+title.TextColor3 = Color3.fromRGB(80, 80, 120)
+title.TextSize = 22
+title.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Container with Scroll
+local scrollFrame = Instance.new("ScrollingFrame", main)
+scrollFrame.Size = UDim2.new(1, -30, 1, -90)
+scrollFrame.Position = UDim2.new(0, 15, 0, 75)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 200)
+scrollFrame.ScrollBarImageTransparency = 0.5
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.ClipsDescendants = true
+
+local container = Instance.new("Frame", scrollFrame)
+container.Size = UDim2.new(1, -10, 0, 0)
+container.BackgroundTransparency = 1
+container.AutomaticSize = Enum.AutomaticSize.Y
+
+local UIList = Instance.new("UIListLayout", container)
+UIList.Padding = UDim.new(0, 15)
+UIList.FillDirection = Enum.FillDirection.Vertical
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
+
+local UIPadding = Instance.new("UIPadding", container)
+UIPadding.PaddingTop = UDim.new(0, 10)
+UIPadding.PaddingBottom = UDim.new(0, 10)
+
+-- Update canvas size
+UIList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, UIList.AbsoluteContentSize.Y + 20)
+end)
+
+-- Step/Tutorial Frame (Glassmorphism)
 local stepFrame = Instance.new("Frame", gui)
-stepFrame.Size = UDim2.new(0, 380, 0, 220)
-stepFrame.Position = UDim2.new(0.5, -190, 0.5, -110)
-stepFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+stepFrame.Size = UDim2.new(0, 480, 0, 300)
+stepFrame.Position = UDim2.new(0.5, -240, 0.5, -150)
+stepFrame.BackgroundColor3 = Color3.fromRGB(250, 250, 255)
+stepFrame.BackgroundTransparency = 0.25
 stepFrame.BorderSizePixel = 0
 stepFrame.Visible = false
 stepFrame.ZIndex = 50
-Instance.new("UICorner", stepFrame).CornerRadius = UDim.new(0, 12)
+stepFrame.ClipsDescendants = true
+createCorner(stepFrame, 20)
+createStroke(stepFrame, Color3.fromRGB(255, 255, 255), 2)
 
-local stepTitle = Instance.new("TextLabel", stepFrame)
-stepTitle.Size = UDim2.new(1, 0, 0, 40)
-stepTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
+local stepHeader = Instance.new("Frame", stepFrame)
+stepHeader.Size = UDim2.new(1, 0, 0, 60)
+stepHeader.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+stepHeader.BackgroundTransparency = 0.4
+stepHeader.BorderSizePixel = 0
+createCorner(stepHeader, 20)
+
+local stepTitle = Instance.new("TextLabel", stepHeader)
+stepTitle.Size = UDim2.new(1, -90, 1, 0)
+stepTitle.Position = UDim2.new(0, 15, 0, 0)
+stepTitle.BackgroundTransparency = 1
 stepTitle.Font = Enum.Font.GothamBold
-stepTitle.TextColor3 = Color3.fromRGB(255,255,255)
+stepTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
 stepTitle.TextSize = 20
 stepTitle.Text = "Tutorial"
-Instance.new("UICorner", stepTitle).CornerRadius = UDim.new(0, 12)
+stepTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local stepProgress = Instance.new("TextLabel", stepHeader)
+stepProgress.Size = UDim2.new(0, 65, 0, 28)
+stepProgress.Position = UDim2.new(1, -80, 0.5, -14)
+stepProgress.BackgroundColor3 = Color3.fromRGB(150, 170, 255)
+stepProgress.BackgroundTransparency = 0.3
+stepProgress.Font = Enum.Font.GothamBold
+stepProgress.TextColor3 = Color3.fromRGB(255, 255, 255)
+stepProgress.TextSize = 15
+stepProgress.Text = "1/5"
+createCorner(stepProgress, 8)
 
 local stepText = Instance.new("TextLabel", stepFrame)
-stepText.Size = UDim2.new(0.9, 0, 0.6, 0)
-stepText.Position = UDim2.new(0.05, 0, 0.25, 0)
+stepText.Size = UDim2.new(0.93, 0, 0.5, 0)
+stepText.Position = UDim2.new(0.035, 0, 0.28, 0)
 stepText.BackgroundTransparency = 1
-stepText.Font = Enum.Font.GothamMedium
-stepText.TextColor3 = Color3.fromRGB(230,230,255)
+stepText.Font = Enum.Font.Gotham
+stepText.TextColor3 = Color3.fromRGB(60, 60, 100)
 stepText.TextWrapped = true
-stepText.TextYAlignment = Enum.TextYAlignment.Center
-stepText.TextXAlignment = Enum.TextXAlignment.Center
-stepText.TextSize = 18
+stepText.TextYAlignment = Enum.TextYAlignment.Top
+stepText.TextSize = 17
 stepText.Text = ""
+stepText.RichText = true
 
-local nextBtn = Instance.new("TextButton", stepFrame)
-nextBtn.Size = UDim2.new(0.4, 0, 0, 35)
-nextBtn.Position = UDim2.new(0.3, 0, 1, -45)
-nextBtn.BackgroundColor3 = Color3.fromRGB(70, 100, 255)
+local buttonContainer2 = Instance.new("Frame", stepFrame)
+buttonContainer2.Size = UDim2.new(0.92, 0, 0, 45)
+buttonContainer2.Position = UDim2.new(0.04, 0, 1, -60)
+buttonContainer2.BackgroundTransparency = 1
+
+local prevBtn = Instance.new("TextButton", buttonContainer2)
+prevBtn.Size = UDim2.new(0.35, -5, 1, 0)
+prevBtn.Position = UDim2.new(0, 0, 0, 0)
+prevBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 230)
+prevBtn.BackgroundTransparency = 0.3
+prevBtn.Font = Enum.Font.GothamBold
+prevBtn.TextColor3 = Color3.fromRGB(80, 80, 120)
+prevBtn.TextSize = 16
+prevBtn.Text = "← Previous"
+createCorner(prevBtn, 12)
+createStroke(prevBtn, Color3.fromRGB(255, 255, 255), 1)
+
+local nextBtn = Instance.new("TextButton", buttonContainer2)
+nextBtn.Size = UDim2.new(0.6, -5, 1, 0)
+nextBtn.Position = UDim2.new(0.4, 0, 0, 0)
+nextBtn.BackgroundColor3 = Color3.fromRGB(120, 150, 255)
+nextBtn.BackgroundTransparency = 0.2
 nextBtn.Font = Enum.Font.GothamBold
-nextBtn.TextColor3 = Color3.fromRGB(255,255,255)
+nextBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 nextBtn.TextSize = 17
-nextBtn.Text = "Next Step"
-Instance.new("UICorner", nextBtn).CornerRadius = UDim.new(0, 8)
+nextBtn.Text = "Next Step →"
+createCorner(nextBtn, 12)
+createStroke(nextBtn, Color3.fromRGB(255, 255, 255), 1)
 
 -- Step Logic
 local function showSteps(titleText, steps)
 	main.Visible = false
 	stepFrame.Visible = true
+	overlay.Visible = true
 	stepTitle.Text = titleText
+	
+	smoothTween(overlay, {BackgroundTransparency = 0.5}):Play()
+	smoothTween(blurEffect, {Size = 18}, 0.4):Play()
+	
+	stepFrame.Size = UDim2.new(0, 480, 0, 0)
+	smoothTween(stepFrame, {Size = UDim2.new(0, 480, 0, 300)}, 0.5, Enum.EasingStyle.Back):Play()
+	
 	local index = 1
-	stepText.Text = steps[index]
-	TweenService:Create(blurEffect, TweenInfo.new(0.3), {Size = 20}):Play()
-
-	local conn
-	conn = nextBtn.MouseButton1Click:Connect(function()
-		index += 1
-		if index <= #steps then
-			stepText.Text = steps[index]
-			if index == #steps then
-				nextBtn.Text = "Finish"
-			end
+	
+	local function updateStep()
+		stepText.Text = steps[index]
+		stepProgress.Text = index .. "/" .. #steps
+		
+		prevBtn.Visible = index > 1
+		
+		if index == #steps then
+			nextBtn.Text = "✓ Finish"
+			nextBtn.BackgroundColor3 = Color3.fromRGB(100, 220, 150)
 		else
-			conn:Disconnect()
+			nextBtn.Text = "Next Step →"
+			nextBtn.BackgroundColor3 = Color3.fromRGB(120, 150, 255)
+		end
+		
+		stepText.TextTransparency = 1
+		smoothTween(stepText, {TextTransparency = 0}, 0.3):Play()
+	end
+	
+	updateStep()
+	
+	local nextConn, prevConn
+	
+	nextConn = nextBtn.MouseButton1Click:Connect(function()
+		if index < #steps then
+			index += 1
+			updateStep()
+		else
+			nextConn:Disconnect()
+			if prevConn then prevConn:Disconnect() end
+			
+			smoothTween(stepFrame, {Size = UDim2.new(0, 480, 0, 0)}, 0.3):Play()
+			smoothTween(overlay, {BackgroundTransparency = 1}, 0.3):Play()
+			smoothTween(blurEffect, {Size = 0}, 0.3):Play()
+			task.wait(0.3)
+			
 			stepFrame.Visible = false
+			overlay.Visible = false
 			main.Visible = true
-			TweenService:Create(blurEffect, TweenInfo.new(0.3), {Size = 0}):Play()
-			nextBtn.Text = "Next Step"
+		end
+	end)
+	
+	prevConn = prevBtn.MouseButton1Click:Connect(function()
+		if index > 1 then
+			index -= 1
+			updateStep()
 		end
 	end)
 end
 
--- 🔥 Animated Processing Screen (6s)
+-- Processing Screen (Glassmorphism)
 local function showProcessing(customText)
-	local frame = Instance.new("Frame", gui)
-	frame.AnchorPoint = Vector2.new(0.5, 0.5)
-	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	frame.Size = UDim2.new(0, 420, 0, 240)
-	frame.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
-	frame.ZIndex = 60
-	frame.BackgroundTransparency = 1
-	Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
-
-	local title = Instance.new("TextLabel", frame)
-	title.Size = UDim2.new(1, 0, 0, 50)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.GothamBold
-	title.Text = "Processing..."
-	title.TextSize = 22
-	title.TextColor3 = Color3.fromRGB(255,255,255)
-	title.Position = UDim2.new(0, 0, 0, 20)
-
-	local desc = Instance.new("TextLabel", frame)
-	desc.Size = UDim2.new(0.9, 0, 0, 40)
-	desc.Position = UDim2.new(0.05, 0, 0, 70)
+	local processingFrame = Instance.new("Frame", gui)
+	processingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+	processingFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	processingFrame.Size = UDim2.new(0, 0, 0, 0)
+	processingFrame.BackgroundColor3 = Color3.fromRGB(245, 245, 255)
+	processingFrame.BackgroundTransparency = 0.2
+	processingFrame.ZIndex = 60
+	processingFrame.ClipsDescendants = true
+	createCorner(processingFrame, 20)
+	createStroke(processingFrame, Color3.fromRGB(255, 255, 255), 2)
+	
+	smoothTween(processingFrame, {Size = UDim2.new(0, 480, 0, 280)}, 0.5, Enum.EasingStyle.Back):Play()
+	
+	local icon = Instance.new("TextLabel", processingFrame)
+	icon.Size = UDim2.new(0, 70, 0, 70)
+	icon.Position = UDim2.new(0.5, -35, 0, 25)
+	icon.BackgroundTransparency = 1
+	icon.Font = Enum.Font.GothamBold
+	icon.Text = "⚡"
+	icon.TextSize = 52
+	icon.TextColor3 = Color3.fromRGB(120, 150, 255)
+	
+	local spinConnection
+	local rotation = 0
+	spinConnection = RunService.RenderStepped:Connect(function(dt)
+		rotation = (rotation + dt * 100) % 360
+		icon.Rotation = rotation
+	end)
+	
+	local titleLabel = Instance.new("TextLabel", processingFrame)
+	titleLabel.Size = UDim2.new(0.9, 0, 0, 40)
+	titleLabel.Position = UDim2.new(0.05, 0, 0, 105)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.Text = "Processing..."
+	titleLabel.TextSize = 24
+	titleLabel.TextColor3 = Color3.fromRGB(70, 70, 110)
+	
+	local desc = Instance.new("TextLabel", processingFrame)
+	desc.Size = UDim2.new(0.88, 0, 0, 50)
+	desc.Position = UDim2.new(0.06, 0, 0, 150)
 	desc.BackgroundTransparency = 1
 	desc.Font = Enum.Font.Gotham
 	desc.TextWrapped = true
-	desc.TextYAlignment = Enum.TextYAlignment.Top
-	desc.TextColor3 = Color3.fromRGB(200,200,255)
-	desc.TextSize = 17
+	desc.TextColor3 = Color3.fromRGB(100, 100, 150)
+	desc.TextSize = 16
 	desc.Text = customText or "Executing action..."
-
-	local barBG = Instance.new("Frame", frame)
-	barBG.Size = UDim2.new(0.8, 0, 0, 14)
-	barBG.Position = UDim2.new(0.1, 0, 0.7, 0)
-	barBG.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
-	Instance.new("UICorner", barBG).CornerRadius = UDim.new(0, 8)
-
+	
+	local barBG = Instance.new("Frame", processingFrame)
+	barBG.Size = UDim2.new(0.85, 0, 0, 10)
+	barBG.Position = UDim2.new(0.075, 0, 0, 220)
+	barBG.BackgroundColor3 = Color3.fromRGB(220, 220, 240)
+	barBG.BackgroundTransparency = 0.3
+	createCorner(barBG, 5)
+	
 	local bar = Instance.new("Frame", barBG)
 	bar.Size = UDim2.new(0, 0, 1, 0)
-	bar.BackgroundColor3 = Color3.fromRGB(100, 120, 255)
-	Instance.new("UICorner", bar).CornerRadius = UDim.new(0, 8)
-
-	local doneText = Instance.new("TextLabel", frame)
-	doneText.Size = UDim2.new(1, 0, 0, 40)
-	doneText.Position = UDim2.new(0, 0, 0.8, 0)
-	doneText.BackgroundTransparency = 1
-	doneText.Font = Enum.Font.GothamBold
-	doneText.TextSize = 20
-	doneText.TextColor3 = Color3.fromRGB(120,255,120)
-	doneText.Text = "✅ Done!"
-	doneText.Visible = false
-
-	TweenService:Create(frame, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
-	TweenService:Create(bar, TweenInfo.new(6, Enum.EasingStyle.Linear), {Size = UDim2.new(1, 0, 1, 0)}):Play()
-	task.wait(6)
-
-	doneText.Visible = true
-	title.Text = "Completed!"
-	desc.Text = "Everything is ready 🎉"
-	TweenService:Create(bar, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(120,255,120)}):Play()
-	task.wait(1.5)
-
-	TweenService:Create(frame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+	bar.BackgroundColor3 = Color3.fromRGB(120, 150, 255)
+	bar.BackgroundTransparency = 0.2
+	createCorner(bar, 5)
+	
+	local percentage = Instance.new("TextLabel", processingFrame)
+	percentage.Size = UDim2.new(1, 0, 0, 30)
+	percentage.Position = UDim2.new(0, 0, 0, 240)
+	percentage.BackgroundTransparency = 1
+	percentage.Font = Enum.Font.GothamBold
+	percentage.TextSize = 15
+	percentage.TextColor3 = Color3.fromRGB(120, 150, 255)
+	percentage.Text = "0%"
+	
+	local tweenInfo = TweenInfo.new(5.5, Enum.EasingStyle.Sine)
+	local goal = {Size = UDim2.new(1, 0, 1, 0)}
+	local barTween = TweenService:Create(bar, tweenInfo, goal)
+	barTween:Play()
+	
+	task.spawn(function()
+		for i = 0, 100, 2 do
+			percentage.Text = i .. "%"
+			task.wait(0.11)
+		end
+	end)
+	
+	task.wait(5.5)
+	
+	spinConnection:Disconnect()
+	icon.Text = "✓"
+	icon.Rotation = 0
+	icon.TextColor3 = Color3.fromRGB(100, 220, 150)
+	titleLabel.Text = "Completed!"
+	titleLabel.TextColor3 = Color3.fromRGB(100, 220, 150)
+	desc.Text = "Everything is ready! 🎉"
+	percentage.Text = "100%"
+	
+	smoothTween(bar, {BackgroundColor3 = Color3.fromRGB(100, 220, 150)}, 0.3):Play()
+	task.wait(1.8)
+	
+	smoothTween(processingFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.4, Enum.EasingStyle.Back):Play()
 	task.wait(0.4)
-	frame:Destroy()
+	processingFrame:Destroy()
 end
 
--- Create button group
-local function newButtonPair(title, subText, callback)
+-- Create Glossy Feature Card
+local function createFeatureButton(icon, title, description, tutorialTitle, steps)
 	local section = Instance.new("Frame")
-	section.Size = UDim2.new(0.9, 0, 0, 80)
-	section.BackgroundTransparency = 1
+	section.Size = UDim2.new(0.98, 0, 0, 105)
+	section.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	section.BackgroundTransparency = 0.4
+	section.BorderSizePixel = 0
 	section.Parent = container
-
-	local mainBtn = Instance.new("TextButton", section)
-	mainBtn.Size = UDim2.new(1, 0, 0, 40)
-	mainBtn.Position = UDim2.new(0, 0, 0, 0)
-	mainBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 65)
-	mainBtn.Font = Enum.Font.GothamBold
-	mainBtn.TextColor3 = Color3.fromRGB(255,255,255)
-	mainBtn.TextSize = 17
-	mainBtn.Text = title
-	Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0, 8)
-
-	local subBtn = Instance.new("TextButton", section)
-	subBtn.Size = UDim2.new(1, 0, 0, 28)
-	subBtn.Position = UDim2.new(0, 0, 0, 50)
-	subBtn.BackgroundColor3 = Color3.fromRGB(65, 65, 85)
-	subBtn.Font = Enum.Font.Gotham
-	subBtn.TextColor3 = Color3.fromRGB(220,220,255)
-	subBtn.TextSize = 15
-	subBtn.Text = subText
-	Instance.new("UICorner", subBtn).CornerRadius = UDim.new(0, 6)
-
-	for _, b in pairs({mainBtn, subBtn}) do
-		b.MouseEnter:Connect(function()
-			TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(75, 75, 105)}):Play()
-		end)
-		b.MouseLeave:Connect(function()
-			TweenService:Create(b, TweenInfo.new(0.15), {BackgroundColor3 = b == mainBtn and Color3.fromRGB(45,45,65) or Color3.fromRGB(65,65,85)}):Play()
-		end)
-	end
-
-	mainBtn.MouseButton1Click:Connect(callback)
-
-	subBtn.MouseButton1Click:Connect(function()
-		local customMessage = ""
+	createCorner(section, 15)
+	createStroke(section, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local iconLabel = Instance.new("TextLabel", section)
+	iconLabel.Size = UDim2.new(0, 55, 0, 55)
+	iconLabel.Position = UDim2.new(0, 15, 0, 12)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Font = Enum.Font.GothamBold
+	iconLabel.Text = icon
+	iconLabel.TextSize = 36
+	iconLabel.TextColor3 = Color3.fromRGB(100, 130, 255)
+	
+	local titleLabel = Instance.new("TextLabel", section)
+	titleLabel.Size = UDim2.new(1, -85, 0, 28)
+	titleLabel.Position = UDim2.new(0, 78, 0, 10)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextColor3 = Color3.fromRGB(60, 60, 100)
+	titleLabel.TextSize = 18
+	titleLabel.Text = title
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local descLabel = Instance.new("TextLabel", section)
+	descLabel.Size = UDim2.new(1, -85, 0, 22)
+	descLabel.Position = UDim2.new(0, 78, 0, 38)
+	descLabel.BackgroundTransparency = 1
+	descLabel.Font = Enum.Font.Gotham
+	descLabel.TextColor3 = Color3.fromRGB(120, 120, 160)
+	descLabel.TextSize = 14
+	descLabel.Text = description
+	descLabel.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local tutorialBtn = Instance.new("TextButton", section)
+	tutorialBtn.Size = UDim2.new(0.47, -6, 0, 32)
+	tutorialBtn.Position = UDim2.new(0, 10, 1, -42)
+	tutorialBtn.BackgroundColor3 = Color3.fromRGB(180, 180, 220)
+	tutorialBtn.BackgroundTransparency = 0.4
+	tutorialBtn.Font = Enum.Font.GothamBold
+	tutorialBtn.TextColor3 = Color3.fromRGB(70, 70, 110)
+	tutorialBtn.TextSize = 14
+	tutorialBtn.Text = "📖 Tutorial"
+	createCorner(tutorialBtn, 10)
+	createStroke(tutorialBtn, Color3.fromRGB(255, 255, 255), 1)
+	
+	local executeBtn = Instance.new("TextButton", section)
+	executeBtn.Size = UDim2.new(0.47, -6, 0, 32)
+	executeBtn.Position = UDim2.new(0.53, 2, 1, -42)
+	executeBtn.BackgroundColor3 = Color3.fromRGB(120, 150, 255)
+	executeBtn.BackgroundTransparency = 0.2
+	executeBtn.Font = Enum.Font.GothamBold
+	executeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	executeBtn.TextSize = 14
+	executeBtn.Text = "⚡ Execute"
+	createCorner(executeBtn, 10)
+	createStroke(executeBtn, Color3.fromRGB(255, 255, 255), 1)
+	
+	-- Hover effects
+	tutorialBtn.MouseEnter:Connect(function()
+		smoothTween(tutorialBtn, {BackgroundTransparency = 0.2}, 0.2):Play()
+	end)
+	tutorialBtn.MouseLeave:Connect(function()
+		smoothTween(tutorialBtn, {BackgroundTransparency = 0.4}, 0.2):Play()
+	end)
+	
+	executeBtn.MouseEnter:Connect(function()
+		smoothTween(executeBtn, {BackgroundTransparency = 0}, 0.2):Play()
+	end)
+	executeBtn.MouseLeave:Connect(function()
+		smoothTween(executeBtn, {BackgroundTransparency = 0.2}, 0.2):Play()
+	end)
+	
+	tutorialBtn.MouseButton1Click:Connect(function()
+		showSteps(tutorialTitle, steps)
+	end)
+	
+	executeBtn.MouseButton1Click:Connect(function()
+		local message = ""
 		if title:find("Hatch") then
-			customMessage = "Instant hatching your desired egg..."
+			message = "🥚 Instant hatching your desired egg..."
 		elseif title:find("Potion") then
-			customMessage = "Brewing Fly Ride potion magic..."
-		elseif title:find("Mega") then
-			customMessage = "Combining pets for Mega Neon results..."
-		elseif title:find("Full") then
-			customMessage = "Training your pet to full grown level..."
+			message = "🧪 Brewing Fly Ride potion magic..."
+		elseif title:find("Mega") or title:find("Neon") then
+			message = "✨ Combining pets for Mega Neon results..."
+		elseif title:find("Grown") then
+			message = "🍼 Training your pet to full grown level..."
 		else
-			customMessage = "Processing your request..."
+			message = "⚡ Processing your request..."
 		end
-		showProcessing(customMessage)
+		showProcessing(message)
 	end)
 end
 
--- Buttons
-newButtonPair("🐣 Instant Hatch Egg Step By Step", "Instant Hatch Egg", function()
-	showSteps("Instant Hatch Egg", {
-		"Step 1: Go to the Nursery 🏠",
-		"Step 2: Find the Crib area 🛏️",
-		"Step 3: Place your Egg in the crib 🥚",
-		"Step 4: Now Go Outside The Nursery (Dont take your Egg with you)",
-		"Step 5: Click Instant Hatch Egg Button 🎉"
-	})
+-- Create Features
+createFeatureButton(
+	"🥚",
+	"Instant Hatch Egg",
+	"Hatch any egg instantly without waiting",
+	"Instant Hatch Egg Tutorial",
+	{
+		"<b>Step 1:</b> Navigate to the Nursery building 🏠",
+		"<b>Step 2:</b> Locate the Crib area inside 🛏️",
+		"<b>Step 3:</b> Place your Egg in the crib 🥚",
+		"<b>Step 4:</b> Exit the Nursery (leave egg behind)",
+		"<b>Step 5:</b> Click the Execute button to hatch! 🎉"
+	}
+)
+
+createFeatureButton(
+	"🧪",
+	"Get Fly Ride Potion",
+	"Obtain Fly/Ride potions for your pets",
+	"Fly Ride Potion Tutorial",
+	{
+		"<b>Step 1:</b> Travel to the Sky Castle ☁️",
+		"<b>Step 2:</b> Enter the Potion Shop 🧪",
+		"<b>Step 3:</b> Walk to the Fly or Ride Potion stand",
+		"<b>Step 4:</b> Interact with the potion (don't buy yet) 💸",
+		"<b>Step 5:</b> Click Execute to get the potion! 🪽"
+	}
+)
+
+createFeatureButton(
+	"✨",
+	"Make Pet Mega/Neon",
+	"Transform pets into Mega/Neon instantly",
+	"Mega/Neon Pet Tutorial",
+	{
+		"<b>Step 1:</b> Head to the Neon Cave 🌈",
+		"<b>Step 2:</b> Place 4 full-grown pets on the circles",
+		"<b>Step 3:</b> Watch the combination magic 🔮",
+		"<b>Step 4:</b> Wait for all 4 pets to be placed ✨",
+		"<b>Step 5:</b> Click Execute to complete fusion! 🐾"
+	}
+)
+
+createFeatureButton(
+	"🍼",
+	"Auto Full Grown Pet",
+	"Grow your pet to full grown automatically",
+	"Auto Full Grown Tutorial",
+	{
+		"<b>Step 1:</b> Equip the pet you want to grow 🐕",
+		"<b>Step 2:</b> Find a safe location 🏡",
+		"<b>Step 3:</b> Let the script handle training 💫",
+		"<b>Step 4:</b> Your pet will grow in ~15 seconds",
+		"<b>Step 5:</b> Click Execute to start training! 🚀"
+	}
+)
+
+-- Show icons on hover
+buttonContainer.MouseEnter:Connect(function()
+	smoothTween(closeIcon, {TextTransparency = 0}, 0.2):Play()
+	smoothTween(minimizeIcon, {TextTransparency = 0}, 0.2):Play()
+	smoothTween(settingsIcon, {TextTransparency = 0}, 0.2):Play()
 end)
 
-newButtonPair("🪽 Get Fly Ride Potion Step By Step", "Get Fly Ride Potion", function()
-	showSteps("Get Fly Ride Potion", {
-		"Step 1: Head to the Sky Castle ☁️",
-		"Step 2: Find the Potion Room 🧪",
-		"Step 3: Walk to the Fly or Ride Potion stand",
-		"Step 4: Pretend to buy it 💸",
-		"Step 5: Click Fly Ride Potion Button 🪽"
-	})
+buttonContainer.MouseLeave:Connect(function()
+	smoothTween(closeIcon, {TextTransparency = 1}, 0.2):Play()
+	smoothTween(minimizeIcon, {TextTransparency = 1}, 0.2):Play()
+	smoothTween(settingsIcon, {TextTransparency = 1}, 0.2):Play()
 end)
 
-newButtonPair("✨ Make Pet Mega/Neon Step By Step", "Make Pet Mega/Neon", function()
-	showSteps("Make Pet Mega/Neon", {
-		"Step 1: Go to the Neon Cave 🌈",
-		"Step 2: Place your full-grown pets on the circles",
-		"Step 3: Watch the magic combine 🔮",
-		"Step 4: When 4 Pets is Placed proceed to step 5 ✨",
-		"Step 5: Click Make Pet Mega/Neon Button 🐾"
-	})
+-- Close Button
+close.MouseEnter:Connect(function()
+	smoothTween(close, {BackgroundColor3 = Color3.fromRGB(255, 60, 50)}, 0.2):Play()
+	smoothTween(closeIcon, {TextTransparency = 0}, 0.2):Play()
+end)
+close.MouseLeave:Connect(function()
+	smoothTween(close, {BackgroundColor3 = Color3.fromRGB(255, 95, 86)}, 0.2):Play()
+	smoothTween(closeIcon, {TextTransparency = 1}, 0.2):Play()
 end)
 
-newButtonPair("🍼 Auto Full Grown Pet Step By Step", "Auto Full Grown", function()
-	showSteps("Auto Full Grown Pet", {
-		"Step 1: Equip your pet 🐕",
-		"Step 2: Go to a safe place 🏡",
-		"Step 3: Let the GUI do the Script work 💫",
-		"Step 4: Your pet is going to grow in 15 seconds",
-		"Step 5: Click Auto Full Grown"
-	})
-end)
-
--- Close GUI
 close.MouseButton1Click:Connect(function()
-	TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 0)}):Play()
-	task.wait(0.3)
+	smoothTween(main, {Size = UDim2.new(0, 0, 0, 0)}, 0.4, Enum.EasingStyle.Back):Play()
+	task.wait(0.4)
 	gui:Destroy()
+	blurEffect:Destroy()
 end)
+
+-- Minimize Button
+local isMinimized = false
+minimize.MouseEnter:Connect(function()
+	smoothTween(minimize, {BackgroundColor3 = Color3.fromRGB(255, 170, 30)}, 0.2):Play()
+	smoothTween(minimizeIcon, {TextTransparency = 0}, 0.2):Play()
+end)
+minimize.MouseLeave:Connect(function()
+	smoothTween(minimize, {BackgroundColor3 = Color3.fromRGB(255, 189, 46)}, 0.2):Play()
+	smoothTween(minimizeIcon, {TextTransparency = 1}, 0.2):Play()
+end)
+
+minimize.MouseButton1Click:Connect(function()
+	isMinimized = not isMinimized
+	if isMinimized then
+		smoothTween(main, {Size = UDim2.new(0, 420, 0, 65)}, 0.3):Play()
+		minimizeIcon.Text = "+"
+	else
+		smoothTween(main, {Size = UDim2.new(0, 420, 0, 520)}, 0.3):Play()
+		minimizeIcon.Text = "−"
+	end
+end)
+
+-- Green button hover
+settings.MouseEnter:Connect(function()
+	smoothTween(settings, {BackgroundColor3 = Color3.fromRGB(35, 180, 55)}, 0.2):Play()
+	smoothTween(settingsIcon, {TextTransparency = 0}, 0.2):Play()
+end)
+settings.MouseLeave:Connect(function()
+	smoothTween(settings, {BackgroundColor3 = Color3.fromRGB(40, 201, 64)}, 0.2):Play()
+	smoothTween(settingsIcon, {TextTransparency = 1}, 0.2):Play()
+end)
+
+settings.MouseButton1Click:Connect(function()
+	-- Settings panel will open
+	showSettingsPanel()
+end)
+
+-- Settings Panel
+local settingsPanel = Instance.new("Frame", gui)
+settingsPanel.Size = UDim2.new(0, 450, 0, 450)
+settingsPanel.Position = UDim2.new(0.5, -225, 0.5, -225)
+settingsPanel.BackgroundColor3 = Color3.fromRGB(250, 250, 255)
+settingsPanel.BackgroundTransparency = 0.25
+settingsPanel.BorderSizePixel = 0
+settingsPanel.Visible = false
+settingsPanel.ZIndex = 55
+settingsPanel.ClipsDescendants = true
+createCorner(settingsPanel, 20)
+createStroke(settingsPanel, Color3.fromRGB(255, 255, 255), 2)
+
+local settingsHeader = Instance.new("Frame", settingsPanel)
+settingsHeader.Size = UDim2.new(1, 0, 0, 55)
+settingsHeader.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+settingsHeader.BackgroundTransparency = 0.4
+settingsHeader.BorderSizePixel = 0
+createCorner(settingsHeader, 20)
+
+local settingsTitle = Instance.new("TextLabel", settingsHeader)
+settingsTitle.Size = UDim2.new(1, -20, 1, 0)
+settingsTitle.Position = UDim2.new(0, 10, 0, 0)
+settingsTitle.BackgroundTransparency = 1
+settingsTitle.Font = Enum.Font.GothamBold
+settingsTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+settingsTitle.TextSize = 20
+settingsTitle.Text = "⚙️ Settings"
+settingsTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local closeSettings = Instance.new("TextButton", settingsHeader)
+closeSettings.Size = UDim2.new(0, 35, 0, 35)
+closeSettings.Position = UDim2.new(1, -45, 0.5, -17.5)
+closeSettings.BackgroundColor3 = Color3.fromRGB(255, 95, 86)
+closeSettings.BackgroundTransparency = 0.2
+closeSettings.Text = "✕"
+closeSettings.Font = Enum.Font.GothamBold
+closeSettings.TextSize = 18
+closeSettings.TextColor3 = Color3.fromRGB(255, 255, 255)
+createCorner(closeSettings, 8)
+
+local settingsContent = Instance.new("ScrollingFrame", settingsPanel)
+settingsContent.Size = UDim2.new(1, -20, 1, -70)
+settingsContent.Position = UDim2.new(0, 10, 0, 60)
+settingsContent.BackgroundTransparency = 1
+settingsContent.BorderSizePixel = 0
+settingsContent.ScrollBarThickness = 5
+settingsContent.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 200)
+settingsContent.ScrollBarImageTransparency = 0.5
+settingsContent.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local settingsContainer = Instance.new("Frame", settingsContent)
+settingsContainer.Size = UDim2.new(1, -10, 0, 0)
+settingsContainer.BackgroundTransparency = 1
+settingsContainer.AutomaticSize = Enum.AutomaticSize.Y
+
+local settingsList = Instance.new("UIListLayout", settingsContainer)
+settingsList.Padding = UDim.new(0, 12)
+settingsList.FillDirection = Enum.FillDirection.Vertical
+settingsList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local settingsPadding = Instance.new("UIPadding", settingsContainer)
+settingsPadding.PaddingTop = UDim.new(0, 10)
+settingsPadding.PaddingBottom = UDim.new(0, 10)
+
+settingsList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	settingsContent.CanvasSize = UDim2.new(0, 0, 0, settingsList.AbsoluteContentSize.Y + 20)
+end)
+
+-- Current theme colors
+local currentTheme = {
+	main = Color3.fromRGB(245, 245, 255),
+	header = Color3.fromRGB(255, 255, 255),
+	accent = Color3.fromRGB(120, 150, 255),
+	text = Color3.fromRGB(80, 80, 120)
+}
+
+-- Theme presets with glossy colors
+local themes = {
+	{name = "Lavender Dream 💜", main = Color3.fromRGB(245, 240, 255), header = Color3.fromRGB(255, 250, 255), accent = Color3.fromRGB(160, 120, 255), text = Color3.fromRGB(90, 70, 130)},
+	{name = "Ocean Breeze 🌊", main = Color3.fromRGB(240, 250, 255), header = Color3.fromRGB(250, 255, 255), accent = Color3.fromRGB(80, 180, 255), text = Color3.fromRGB(60, 100, 140)},
+	{name = "Mint Fresh 🌿", main = Color3.fromRGB(240, 255, 245), header = Color3.fromRGB(250, 255, 250), accent = Color3.fromRGB(100, 220, 150), text = Color3.fromRGB(60, 120, 80)},
+	{name = "Sunset Glow 🌅", main = Color3.fromRGB(255, 245, 240), header = Color3.fromRGB(255, 250, 245), accent = Color3.fromRGB(255, 140, 100), text = Color3.fromRGB(140, 80, 60)},
+	{name = "Rose Quartz 🌸", main = Color3.fromRGB(255, 240, 245), header = Color3.fromRGB(255, 245, 250), accent = Color3.fromRGB(255, 120, 180), text = Color3.fromRGB(140, 70, 100)},
+	{name = "Peach Sorbet 🍑", main = Color3.fromRGB(255, 245, 235), header = Color3.fromRGB(255, 250, 245), accent = Color3.fromRGB(255, 160, 120), text = Color3.fromRGB(140, 90, 70)},
+	{name = "Sky Blue ☁️", main = Color3.fromRGB(235, 245, 255), header = Color3.fromRGB(245, 250, 255), accent = Color3.fromRGB(120, 180, 255), text = Color3.fromRGB(70, 100, 140)},
+	{name = "Lemon Zest 🍋", main = Color3.fromRGB(255, 255, 240), header = Color3.fromRGB(255, 255, 250), accent = Color3.fromRGB(255, 200, 80), text = Color3.fromRGB(130, 110, 50)}
+}
+
+local function applyTheme(theme)
+	currentTheme = theme
+	smoothTween(main, {BackgroundColor3 = theme.main}, 0.5):Play()
+	smoothTween(header, {BackgroundColor3 = theme.header}, 0.5):Play()
+	smoothTween(title, {TextColor3 = theme.text}, 0.5):Play()
+	smoothTween(stepFrame, {BackgroundColor3 = theme.main}, 0.5):Play()
+	smoothTween(stepHeader, {BackgroundColor3 = theme.header}, 0.5):Play()
+	smoothTween(stepTitle, {TextColor3 = theme.text}, 0.5):Play()
+	smoothTween(settingsPanel, {BackgroundColor3 = theme.main}, 0.5):Play()
+	smoothTween(settingsHeader, {BackgroundColor3 = theme.header}, 0.5):Play()
+	smoothTween(settingsTitle, {TextColor3 = theme.text}, 0.5):Play()
+	smoothTween(nextBtn, {BackgroundColor3 = theme.accent}, 0.5):Play()
+	
+	-- Update all feature cards
+	for _, child in ipairs(container:GetChildren()) do
+		if child:IsA("Frame") and child.Name ~= "UIListLayout" and child.Name ~= "UIPadding" then
+			smoothTween(child, {BackgroundColor3 = theme.header}, 0.5):Play()
+			for _, subChild in ipairs(child:GetChildren()) do
+				if subChild.Name == "TextLabel" and subChild.Text:find("^[🥚🪽✨🍼]") then
+					smoothTween(subChild, {TextColor3 = theme.accent}, 0.5):Play()
+				elseif subChild:IsA("TextLabel") and not subChild.Name:find("Icon") then
+					if subChild.TextSize > 15 then
+						smoothTween(subChild, {TextColor3 = theme.text}, 0.5):Play()
+					else
+						smoothTween(subChild, {TextColor3 = Color3.fromRGB(
+							math.floor(theme.text.R * 255 * 1.4),
+							math.floor(theme.text.G * 255 * 1.4),
+							math.floor(theme.text.B * 255 * 1.4)
+						)}, 0.5):Play()
+					end
+				elseif subChild.Name == "TextButton" and subChild.Text:find("⚡") then
+					smoothTween(subChild, {BackgroundColor3 = theme.accent}, 0.5):Play()
+				end
+			end
+		end
+	end
+	
+	-- Update all settings sections
+	for _, child in ipairs(settingsContainer:GetChildren()) do
+		if child:IsA("Frame") then
+			smoothTween(child, {BackgroundColor3 = theme.header}, 0.5):Play()
+		end
+	end
+end
+
+-- Color Changer Section
+local function createColorSection()
+	local colorSection = Instance.new("Frame")
+	colorSection.Size = UDim2.new(0.98, 0, 0, 240)
+	colorSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	colorSection.BackgroundTransparency = 0.4
+	colorSection.BorderSizePixel = 0
+	colorSection.Parent = settingsContainer
+	createCorner(colorSection, 15)
+	createStroke(colorSection, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local colorTitle = Instance.new("TextLabel", colorSection)
+	colorTitle.Size = UDim2.new(1, -20, 0, 30)
+	colorTitle.Position = UDim2.new(0, 10, 0, 10)
+	colorTitle.BackgroundTransparency = 1
+	colorTitle.Font = Enum.Font.GothamBold
+	colorTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+	colorTitle.TextSize = 17
+	colorTitle.Text = "🎨 Theme Colors"
+	colorTitle.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local colorGrid = Instance.new("Frame", colorSection)
+	colorGrid.Size = UDim2.new(1, -20, 0, 190)
+	colorGrid.Position = UDim2.new(0, 10, 0, 45)
+	colorGrid.BackgroundTransparency = 1
+	
+	local gridLayout = Instance.new("UIGridLayout", colorGrid)
+	gridLayout.CellSize = UDim2.new(0.48, -5, 0, 40)
+	gridLayout.CellPadding = UDim2.new(0.02, 5, 0, 8)
+	gridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	
+	for i, theme in ipairs(themes) do
+		local themeBtn = Instance.new("TextButton", colorGrid)
+		themeBtn.LayoutOrder = i
+		themeBtn.BackgroundColor3 = theme.accent
+		themeBtn.BackgroundTransparency = 0.3
+		themeBtn.Font = Enum.Font.GothamBold
+		themeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+		themeBtn.TextSize = 14
+		themeBtn.Text = theme.name
+		createCorner(themeBtn, 10)
+		createStroke(themeBtn, Color3.fromRGB(255, 255, 255), 1)
+		
+		themeBtn.MouseEnter:Connect(function()
+			smoothTween(themeBtn, {BackgroundTransparency = 0.1}, 0.2):Play()
+		end)
+		themeBtn.MouseLeave:Connect(function()
+			smoothTween(themeBtn, {BackgroundTransparency = 0.3}, 0.2):Play()
+		end)
+		
+		themeBtn.MouseButton1Click:Connect(function()
+			applyTheme(theme)
+		end)
+	end
+end
+
+-- Anti-AFK Toggle
+local antiAFKEnabled = false
+local antiAFKConnection
+
+local function createAntiAFK()
+	local afkSection = Instance.new("Frame")
+	afkSection.Size = UDim2.new(0.98, 0, 0, 80)
+	afkSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	afkSection.BackgroundTransparency = 0.4
+	afkSection.BorderSizePixel = 0
+	afkSection.Parent = settingsContainer
+	createCorner(afkSection, 15)
+	createStroke(afkSection, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local afkTitle = Instance.new("TextLabel", afkSection)
+	afkTitle.Size = UDim2.new(0.7, 0, 0, 30)
+	afkTitle.Position = UDim2.new(0, 15, 0, 10)
+	afkTitle.BackgroundTransparency = 1
+	afkTitle.Font = Enum.Font.GothamBold
+	afkTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+	afkTitle.TextSize = 16
+	afkTitle.Text = "🛡️ Anti-AFK Protection"
+	afkTitle.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local afkDesc = Instance.new("TextLabel", afkSection)
+	afkDesc.Size = UDim2.new(1, -20, 0, 20)
+	afkDesc.Position = UDim2.new(0, 15, 0, 38)
+	afkDesc.BackgroundTransparency = 1
+	afkDesc.Font = Enum.Font.Gotham
+	afkDesc.TextColor3 = Color3.fromRGB(120, 120, 160)
+	afkDesc.TextSize = 13
+	afkDesc.Text = "Prevents being kicked for inactivity"
+	afkDesc.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local toggleBtn = Instance.new("TextButton", afkSection)
+	toggleBtn.Size = UDim2.new(0, 80, 0, 32)
+	toggleBtn.Position = UDim2.new(1, -95, 0.5, -16)
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 220)
+	toggleBtn.BackgroundTransparency = 0.3
+	toggleBtn.Font = Enum.Font.GothamBold
+	toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	toggleBtn.TextSize = 14
+	toggleBtn.Text = "OFF"
+	createCorner(toggleBtn, 10)
+	createStroke(toggleBtn, Color3.fromRGB(255, 255, 255), 1)
+	
+	toggleBtn.MouseButton1Click:Connect(function()
+		antiAFKEnabled = not antiAFKEnabled
+		
+		if antiAFKEnabled then
+			toggleBtn.Text = "ON"
+			toggleBtn.BackgroundColor3 = Color3.fromRGB(100, 220, 150)
+			
+			local vu = game:GetService("VirtualUser")
+			antiAFKConnection = game:GetService("Players").LocalPlayer.Idled:Connect(function()
+				vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+				task.wait(1)
+				vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+			end)
+		else
+			toggleBtn.Text = "OFF"
+			toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 220)
+			
+			if antiAFKConnection then
+				antiAFKConnection:Disconnect()
+			end
+		end
+	end)
+end
+
+-- Reset Character Button
+local function createResetButton()
+	local resetSection = Instance.new("Frame")
+	resetSection.Size = UDim2.new(0.98, 0, 0, 80)
+	resetSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	resetSection.BackgroundTransparency = 0.4
+	resetSection.BorderSizePixel = 0
+	resetSection.Parent = settingsContainer
+	createCorner(resetSection, 15)
+	createStroke(resetSection, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local resetTitle = Instance.new("TextLabel", resetSection)
+	resetTitle.Size = UDim2.new(0.65, 0, 0, 30)
+	resetTitle.Position = UDim2.new(0, 15, 0, 10)
+	resetTitle.BackgroundTransparency = 1
+	resetTitle.Font = Enum.Font.GothamBold
+	resetTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+	resetTitle.TextSize = 16
+	resetTitle.Text = "🔄 Reset Character"
+	resetTitle.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local resetDesc = Instance.new("TextLabel", resetSection)
+	resetDesc.Size = UDim2.new(1, -20, 0, 20)
+	resetDesc.Position = UDim2.new(0, 15, 0, 38)
+	resetDesc.BackgroundTransparency = 1
+	resetDesc.Font = Enum.Font.Gotham
+	resetDesc.TextColor3 = Color3.fromRGB(120, 120, 160)
+	resetDesc.TextSize = 12
+	resetDesc.Text = "Click if the script is not working"
+	resetDesc.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local resetBtn = Instance.new("TextButton", resetSection)
+	resetBtn.Size = UDim2.new(0, 90, 0, 32)
+	resetBtn.Position = UDim2.new(1, -105, 0.5, -16)
+	resetBtn.BackgroundColor3 = Color3.fromRGB(255, 140, 100)
+	resetBtn.BackgroundTransparency = 0.2
+	resetBtn.Font = Enum.Font.GothamBold
+	resetBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	resetBtn.TextSize = 14
+	resetBtn.Text = "Reset"
+	createCorner(resetBtn, 10)
+	createStroke(resetBtn, Color3.fromRGB(255, 255, 255), 1)
+	
+	resetBtn.MouseEnter:Connect(function()
+		smoothTween(resetBtn, {BackgroundTransparency = 0}, 0.2):Play()
+	end)
+	resetBtn.MouseLeave:Connect(function()
+		smoothTween(resetBtn, {BackgroundTransparency = 0.2}, 0.2):Play()
+	end)
+	
+	resetBtn.MouseButton1Click:Connect(function()
+		LP.Character:BreakJoints()
+	end)
+end
+
+-- FPS Counter
+local function createFPSCounter()
+	local fpsSection = Instance.new("Frame")
+	fpsSection.Size = UDim2.new(0.98, 0, 0, 70)
+	fpsSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	fpsSection.BackgroundTransparency = 0.4
+	fpsSection.BorderSizePixel = 0
+	fpsSection.Parent = settingsContainer
+	createCorner(fpsSection, 15)
+	createStroke(fpsSection, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local fpsTitle = Instance.new("TextLabel", fpsSection)
+	fpsTitle.Size = UDim2.new(0.6, 0, 0, 30)
+	fpsTitle.Position = UDim2.new(0, 15, 0, 8)
+	fpsTitle.BackgroundTransparency = 1
+	fpsTitle.Font = Enum.Font.GothamBold
+	fpsTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+	fpsTitle.TextSize = 16
+	fpsTitle.Text = "📊 Performance"
+	fpsTitle.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local fpsCounter = Instance.new("TextLabel", fpsSection)
+	fpsCounter.Size = UDim2.new(1, -20, 0, 25)
+	fpsCounter.Position = UDim2.new(0, 15, 0, 38)
+	fpsCounter.BackgroundTransparency = 1
+	fpsCounter.Font = Enum.Font.GothamBold
+	fpsCounter.TextColor3 = Color3.fromRGB(100, 220, 150)
+	fpsCounter.TextSize = 18
+	fpsCounter.Text = "FPS: Calculating..."
+	fpsCounter.TextXAlignment = Enum.TextXAlignment.Left
+	
+	task.spawn(function()
+		while fpsCounter and fpsCounter.Parent do
+			local fps = math.floor(1 / RunService.RenderStepped:Wait())
+			fpsCounter.Text = "FPS: " .. fps
+			
+			if fps >= 50 then
+				fpsCounter.TextColor3 = Color3.fromRGB(100, 220, 150)
+			elseif fps >= 30 then
+				fpsCounter.TextColor3 = Color3.fromRGB(255, 200, 80)
+			else
+				fpsCounter.TextColor3 = Color3.fromRGB(255, 100, 100)
+			end
+			
+			task.wait(0.5)
+		end
+	end)
+end
+
+-- Credits Section
+local function createCredits()
+	local creditSection = Instance.new("Frame")
+	creditSection.Size = UDim2.new(0.98, 0, 0, 70)
+	creditSection.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	creditSection.BackgroundTransparency = 0.4
+	creditSection.BorderSizePixel = 0
+	creditSection.Parent = settingsContainer
+	createCorner(creditSection, 15)
+	createStroke(creditSection, Color3.fromRGB(255, 255, 255), 1.5)
+	
+	local creditTitle = Instance.new("TextLabel", creditSection)
+	creditTitle.Size = UDim2.new(1, -20, 0, 25)
+	creditTitle.Position = UDim2.new(0, 15, 0, 10)
+	creditTitle.BackgroundTransparency = 1
+	creditTitle.Font = Enum.Font.GothamBold
+	creditTitle.TextColor3 = Color3.fromRGB(70, 70, 110)
+	creditTitle.TextSize = 16
+	creditTitle.Text = "✨ Created by @WhosJaraddd"
+	creditTitle.TextXAlignment = Enum.TextXAlignment.Left
+	
+	local creditDesc = Instance.new("TextLabel", creditSection)
+	creditDesc.Size = UDim2.new(1, -20, 0, 20)
+	creditDesc.Position = UDim2.new(0, 15, 0, 38)
+	creditDesc.BackgroundTransparency = 1
+	creditDesc.Font = Enum.Font.Gotham
+	creditDesc.TextColor3 = Color3.fromRGB(120, 120, 160)
+	creditDesc.TextSize = 13
+	creditDesc.Text = "Revised with Claude AI • Glossy Edition"
+	creditDesc.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+-- Build settings sections
+createColorSection()
+createAntiAFK()
+createResetButton()
+createFPSCounter()
+createCredits()
+
+-- Show settings function
+function showSettingsPanel()
+	settingsPanel.Visible = true
+	overlay.Visible = true
+	main.Visible = false
+	
+	smoothTween(overlay, {BackgroundTransparency = 0.5}):Play()
+	smoothTween(blurEffect, {Size = 18}, 0.4):Play()
+	
+	settingsPanel.Size = UDim2.new(0, 450, 0, 0)
+	smoothTween(settingsPanel, {Size = UDim2.new(0, 450, 0, 380)}, 0.5, Enum.EasingStyle.Back):Play()
+end
+
+closeSettings.MouseButton1Click:Connect(function()
+	smoothTween(settingsPanel, {Size = UDim2.new(0, 450, 0, 0)}, 0.3):Play()
+	smoothTween(overlay, {BackgroundTransparency = 1}, 0.3):Play()
+	smoothTween(blurEffect, {Size = 0}, 0.3):Play()
+	task.wait(0.3)
+	
+	settingsPanel.Visible = false
+	overlay.Visible = false
+	main.Visible = true
+end)
+
+-- Intro Animation
+main.Size = UDim2.new(0, 0, 0, 0)
+main.Visible = true
+task.wait(0.1)
+smoothTween(main, {Size = UDim2.new(0, 420, 0, 520)}, 0.6, Enum.EasingStyle.Back):Play()
+
+print("✅ Adopt Me GUI Loaded Successfully! (Glossy Edition)")
