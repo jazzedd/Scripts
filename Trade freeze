@@ -384,6 +384,27 @@ Util.createGradient(mainFrame, {
 
 makeDraggable(mainFrame)
 
+-- ============================
+-- RESPONSIVE UI SCALE
+-- ============================
+local UIScale = Instance.new("UIScale")
+UIScale.Parent = mainFrame
+
+local function updateScale()
+	local camera = workspace.CurrentCamera
+	if not camera then return end
+	
+	local viewport = camera.ViewportSize
+	local baseWidth = 1920 -- reference resolution
+	
+	local scale = math.clamp(viewport.X / baseWidth, 0.7, 1.1)
+	UIScale.Scale = scale
+end
+
+updateScale()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(updateScale)
+game:GetService("RunService").RenderStepped:Connect(updateScale)
+
 -- Header
 local header = Instance.new("Frame")
 header.Size = UDim2.new(1, 0, 0, 55)
