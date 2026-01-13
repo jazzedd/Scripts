@@ -1,4 +1,4 @@
--- Trade Freeze GUI 🔒 Premium Edition
+-- Trade Force GUI 🔒 Premium Edition
 -- Enhanced with player selection system
 -- Optimized and refactored for performance
 
@@ -357,7 +357,7 @@ end
 -- MAIN GUI CONSTRUCTION
 -- ============================================================================
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TradeFreezeGuiPremium"
+screenGui.Name = "TradeForceGuiPremium"
 screenGui.ResetOnSpawn = false
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 screenGui.Parent = LP:WaitForChild("PlayerGui")
@@ -481,7 +481,7 @@ end)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "🔒 TRADE FREEZE PRO"
+title.Text = "🔒 TRADE FORCE PRO"
 title.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
 title.Font = Enum.Font.GothamBold
 title.TextSize = 19
@@ -585,7 +585,7 @@ local toggleLabel = Instance.new("TextLabel")
 toggleLabel.Size = UDim2.new(0.6, 0, 1, 0)
 toggleLabel.Position = UDim2.new(0, 14, 0, 0)
 toggleLabel.BackgroundTransparency = 1
-toggleLabel.Text = "🛡️ Trade Freeze"
+toggleLabel.Text = "🛡️ Trade Force"
 toggleLabel.TextColor3 = CONFIG.COLORS.TEXT_PRIMARY
 toggleLabel.Font = Enum.Font.GothamBold
 toggleLabel.TextSize = 15
@@ -752,11 +752,11 @@ toggle.MouseButton1Click:Connect(function()
 	State.isOn = not State.isOn
 	updateToggle()
 	NotificationManager.show(
-		State.isOn and "Trade Freeze Enabled for " .. State.selectedPlayer.DisplayName or "Trade Freeze Disabled", 
+		State.isOn and "Trade Force Enabled for " .. State.selectedPlayer.DisplayName or "Trade Force Disabled", 
 		State.isOn and "success" or "info"
 	)
 	Util.pulseEffect(toggle, "BackgroundTransparency", State.isOn and 0.15 or 0.25, 0, 0.15)
-	print("[Trade Freeze]", State.isOn and "Enabled" or "Disabled", "for", State.selectedPlayer and State.selectedPlayer.Name or "None")
+	print("[Trade Force]", State.isOn and "Enabled" or "Disabled", "for", State.selectedPlayer and State.selectedPlayer.Name or "None")
 end)
 
 -- ============================================================================
@@ -772,7 +772,7 @@ offerButton.MouseButton1Click:Connect(function()
 	end
 	
 	if not State.isOn then
-		NotificationManager.show("Enable Trade Freeze first!", "error")
+		NotificationManager.show("Enable Trade Force first!", "error")
 		Util.pulseEffect(offerButton, "BackgroundColor3", CONFIG.COLORS.PRIMARY, CONFIG.COLORS.ERROR, 0.2)
 		task.wait(0.4)
 		offerButton.BackgroundColor3 = CONFIG.COLORS.PRIMARY
@@ -782,7 +782,7 @@ offerButton.MouseButton1Click:Connect(function()
 	State.petsOffered = true
 	statusLabel.Text = "✅ All Pets Added With Priority"
 	NotificationManager.show("All Pets Offered to " .. State.selectedPlayer.DisplayName, "success")
-	print("[Trade Freeze] Offering pets to:", State.selectedPlayer.Name, "(" .. State.selectedPlayer.UserId .. ")")
+	print("[Trade Force] Offering pets to:", State.selectedPlayer.Name, "(" .. State.selectedPlayer.UserId .. ")")
 	-- Insert your offer pets logic here
 end)
 
@@ -799,7 +799,7 @@ acceptButton.MouseButton1Click:Connect(function()
 	end
 	
 	if not State.isOn then
-		NotificationManager.show("Enable Trade Freeze first!", "error")
+		NotificationManager.show("Enable Trade Force first!", "error")
 		Util.pulseEffect(acceptButton, "BackgroundColor3", CONFIG.COLORS.SUCCESS, CONFIG.COLORS.ERROR, 0.2)
 		task.wait(0.4)
 		acceptButton.BackgroundColor3 = CONFIG.COLORS.SUCCESS
@@ -952,7 +952,7 @@ acceptButton.MouseButton1Click:Connect(function()
 	NotificationManager.show("Something went wrong, please try again", "error")
 	statusLabel.Text = "⚠️ Trade failed - Try again"
 	
-	print("[Trade Freeze] Trade attempt failed for:", State.selectedPlayer.Name)
+	print("[Trade Force] Trade attempt failed for:", State.selectedPlayer.Name)
 end)
 
 -- ============================================================================
@@ -972,7 +972,7 @@ closeButton.MouseButton1Click:Connect(function()
 	Util.tween(mainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3, Enum.EasingStyle.Back)
 	task.wait(0.3)
 	screenGui:Destroy()
-	print("[Trade Freeze] GUI Closed")
+	print("[Trade Force] GUI Closed")
 end)
 
 minimizeButton.MouseEnter:Connect(function()
@@ -1004,6 +1004,6 @@ task.wait(0.15)
 Util.tween(mainFrame, {Size = UDim2.new(0, CONFIG.GUI_SIZE.X, 0, CONFIG.GUI_SIZE.Y)}, 0.65, Enum.EasingStyle.Back)
 
 updateToggle()
-print("✅ Trade Freeze GUI Premium Edition Loaded!")
-print("[Trade Freeze] Ready for player selection")
-print("[Trade Freeze] Players in game:", #Players:GetPlayers() - 1)
+print("✅ Trade Force GUI Premium Edition Loaded!")
+print("[Trade Force] Ready for player selection")
+print("[Trade Force] Players in game:", #Players:GetPlayers() - 1)
