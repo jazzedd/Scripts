@@ -9,10 +9,10 @@ setthreadidentity(8)
 local le = loadstring(game:HttpGet("https://raw.githubusercontent.com/Lanientr123/DemonHubfre/refs/heads/main/XbMrXhAU.txt"))()
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "DemonHub | House Cloner",
+   Name = "JazzedHub | House Cloner",
    Icon = 0,
    LoadingTitle = "Premium",
-   LoadingSubtitle = "by DemonHub",
+   LoadingSubtitle = "by Jazzedhub",
    Theme = "Default",
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
