@@ -1,0 +1,104 @@
+-- Disconnect Monitor + Discord Webhook Notifier
+-- Paste this in your executor and run it
+
+local WEBHOOK = "https://discord.com/api/webhooks/1510279157727367381/8DYxb_F9SsZxZC7o-dKH7HcRNTuOTB68r28EdY0GwXLrFnoA7IID_nkN9VCLqKFR_aK8"
+local PING_INTERVAL = 300 -- sends "still running" ping every 5 mins (set 0 to disable)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+
+local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+local startTime = os.time()
+
+local function getTimestamp()
+    return os.date("%Y-%m-%dT%H:%M:%SZ", os.time())
+end
+
+local function sendWebhook(title, description, color)
+    local data = HttpService:JSONEncode({
+        embeds = {{
+            title = title,
+            description = description,
+            color = color,
+            footer = { text = "Roblox Monitor • " .. gameName },
+            timestamp = getTimestamp()
+        }}
+    })
+    local success, err = pcall(function()
+        request({
+            Url = WEBHOOK,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = data
+        })
+    end)
+    if not success then
+        -- fallback for some executors
+        pcall(function()
+            syn.request({
+                Url = WEBHOOK,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = data
+            })
+        end)
+    end
+end
+
+-- Send startup notification
+sendWebhook(
+    "✅ AFK Monitor Started",
+    "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Status:** Connected and running",
+    0x00e87a
+)
+
+-- Detect kick / disconnect
+LocalPlayer.OnClientEvent:Connect(function() end) -- keep alive
+
+game.Close:Connect(function()
+    sendWebhook(
+        "🔴 Game Closed",
+        "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Status:** Game was closed",
+        0xff4444
+    )
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if player == LocalPlayer then
+        sendWebhook(
+            "⚠️ Disconnected",
+            "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Status:** You were removed from the server",
+            0xf5c842
+        )
+    end
+end)
+
+-- Detect teleport / kick message
+LocalPlayer.Kicked:Connect(function(message)
+    sendWebhook(
+        "🚫 Kicked from Server",
+        "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Reason:** " .. (message or "No reason given"),
+        0xff0000
+    )
+end)
+
+-- Optional: periodic "still alive" ping
+if PING_INTERVAL > 0 then
+    local lastPing = os.time()
+    RunService.Heartbeat:Connect(function()
+        if os.time() - lastPing >= PING_INTERVAL then
+            lastPing = os.time()
+            local uptime = os.time() - startTime
+            local minutes = math.floor(uptime / 60)
+            sendWebhook(
+                "💚 Still Running",
+                "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Uptime:** " .. minutes .. " minutes",
+                0x3498db
+            )
+        end
+    end)
+end
+
+print("[Monitor] Disconnect monitor active — webhook notifications enabled")
