@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
+local TeleportService = game:GetService("TeleportService")
 
 local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
 local startTime = os.time()
@@ -35,7 +36,6 @@ local function sendWebhook(title, description, color)
         })
     end)
     if not success then
-        -- fallback for some executors
         pcall(function()
             syn.request({
                 Url = WEBHOOK,
@@ -75,7 +75,7 @@ Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
--- Detect teleport / kick message
+-- Detect kick message
 LocalPlayer.Kicked:Connect(function(message)
     sendWebhook(
         "🚫 Kicked from Server",
@@ -83,6 +83,38 @@ LocalPlayer.Kicked:Connect(function(message)
         0xff0000
     )
 end)
+
+-- Detect teleport to another server
+local teleported = false
+TeleportService.TeleportInitFailed:Connect(function(player, result, errorMessage)
+    sendWebhook(
+        "❌ Teleport Failed",
+        "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Reason:** " .. tostring(errorMessage),
+        0xff4444
+    )
+end)
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    if game.Workspace:FindFirstChild("__teleporting") and not teleported then
+        teleported = true
+        sendWebhook(
+            "🔄 Joined Another Server",
+            "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Status:** Teleported to a new server",
+            0x9b59b6
+        )
+    end
+end)
+
+-- Hook into teleport via Players
+local oldTP = TeleportService.Teleport
+TeleportService.Teleport = function(self, placeId, ...)
+    sendWebhook(
+        "🔄 Joined Another Server",
+        "**Game:** " .. gameName .. "\n**Player:** " .. LocalPlayer.Name .. "\n**Status:** Teleported to a new server",
+        0x9b59b6
+    )
+    return oldTP(self, placeId, ...)
+end
 
 -- Optional: periodic "still alive" ping
 if PING_INTERVAL > 0 then
